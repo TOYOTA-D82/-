@@ -1,0 +1,605 @@
+<title>かなクエスト・假名冒險 — JLPT N5 五十音學習</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    /* --- 藍染 × 朱印 配色 --- */
+    --indigo:   #26456b;   /* 藍染 主色 */
+    --indigo-2: #35608f;   /* 亮藍 */
+    --vermil:   #d64524;   /* 朱紅 印章／行動 */
+    --gold:     #d99a2b;   /* 金 星星／獎勵 */
+    --good:     #2f8f57;   /* 正確 綠 */
+    --bad:      #c33b34;   /* 錯誤 紅 */
+
+    --ground:   #eef1f6;   /* 頁面底（帶靛藍的冷白）*/
+    --card:     #fbfaf6;   /* 歌牌卡（和紙米白）*/
+    --card-edge:#e3e0d5;
+    --ink:      #1b2436;   /* 近黑靛 */
+    --ink-soft: #566076;
+    --line:     #d7dbe4;
+    --shadow:   rgba(27,36,54,.14);
+
+    --font-ui: system-ui, -apple-system, "Segoe UI", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    --font-kana: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", "Meiryo", sans-serif;
+    --r: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground:#141a26; --card:#20293a; --card-edge:#2c3752;
+      --ink:#eef1f7; --ink-soft:#9aa6bd; --line:#2c3547; --shadow:rgba(0,0,0,.4);
+      --indigo:#7aa6d6; --indigo-2:#5b86bb; --vermil:#f2704e; --gold:#e7b653;
+      --good:#4bbd7c; --bad:#ef6a63;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground:#eef1f6; --card:#fbfaf6; --card-edge:#e3e0d5;
+    --ink:#1b2436; --ink-soft:#566076; --line:#d7dbe4; --shadow:rgba(27,36,54,.14);
+    --indigo:#26456b; --indigo-2:#35608f; --vermil:#d64524; --gold:#d99a2b;
+    --good:#2f8f57; --bad:#c33b34;
+  }
+  :root[data-theme="dark"] {
+    --ground:#141a26; --card:#20293a; --card-edge:#2c3752;
+    --ink:#eef1f7; --ink-soft:#9aa6bd; --line:#2c3547; --shadow:rgba(0,0,0,.4);
+    --indigo:#7aa6d6; --indigo-2:#5b86bb; --vermil:#f2704e; --gold:#e7b653;
+    --good:#4bbd7c; --bad:#ef6a63;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--font-ui); line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 16px 64px; }
+
+  /* ---------- 頁首 ---------- */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar { max-width: 860px; margin: 0 auto; padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+  .seal {
+    width: 38px; height: 38px; border-radius: 9px; background: var(--vermil);
+    color: #fff; display: grid; place-items: center; font-family: var(--font-kana);
+    font-weight: 700; font-size: 22px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.25);
+    flex: none;
+  }
+  .brand b { font-size: 15px; letter-spacing: .01em; display: block; }
+  .brand span { font-size: 11.5px; color: var(--ink-soft); letter-spacing: .12em; text-transform: uppercase; }
+
+  .stats { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+  .stat {
+    display: flex; align-items: center; gap: 5px; background: var(--card);
+    border: 1px solid var(--card-edge); border-radius: 999px; padding: 5px 11px;
+    font-weight: 700; font-size: 13px;
+  }
+  .stat small { color: var(--ink-soft); font-weight: 600; }
+  .ring { --p: 0; width: 40px; height: 40px; flex: none; position: relative; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring i { position: absolute; inset: 0; display: grid; place-items: center;
+    font-size: 10.5px; font-weight: 800; font-style: normal; font-variant-numeric: tabular-nums; }
+
+  /* ---------- 分頁 ---------- */
+  .tabs { display: flex; gap: 6px; margin: 18px 0 14px; }
+  .tab {
+    flex: 1; padding: 11px 8px; border: 1px solid var(--card-edge); background: var(--card);
+    border-radius: 12px; font: inherit; font-weight: 700; color: var(--ink-soft);
+    cursor: pointer; transition: .15s; font-size: 14px;
+  }
+  .tab .jp { font-family: var(--font-kana); font-size: 12px; display: block; opacity: .7; margin-top: 1px; }
+  .tab[aria-selected="true"] { background: var(--indigo); color: #fff; border-color: var(--indigo); box-shadow: 0 4px 14px var(--shadow); }
+  .tab:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  /* ---------- 群組選擇 ---------- */
+  .groups { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+  .chip {
+    padding: 7px 13px; border-radius: 999px; border: 1.5px solid var(--card-edge);
+    background: transparent; color: var(--ink-soft); font: inherit; font-weight: 600;
+    font-size: 12.5px; cursor: pointer; transition: .15s;
+  }
+  .chip[aria-pressed="true"] { background: color-mix(in srgb, var(--indigo) 14%, transparent);
+    border-color: var(--indigo); color: var(--indigo); }
+  .chip:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  h2.section { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 0 0 12px; font-weight: 700; }
+
+  /* ---------- 學習：字表 ---------- */
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  @media (max-width: 520px){ .grid { grid-template-columns: repeat(5, 1fr); gap: 6px; } }
+  .cell {
+    aspect-ratio: 3/4; border: 1px solid var(--card-edge); background: var(--card);
+    border-radius: 11px; cursor: pointer; display: grid; place-items: center;
+    position: relative; transition: transform .12s, box-shadow .12s; padding: 4px;
+  }
+  .cell:hover { transform: translateY(-2px); box-shadow: 0 6px 16px var(--shadow); border-color: var(--indigo); }
+  .cell:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .cell.empty { visibility: hidden; }
+  .cell .kk { font-family: var(--font-kana); font-size: clamp(22px, 6vw, 30px); font-weight: 600; line-height: 1; }
+  .cell .rr { font-size: 11px; color: var(--ink-soft); margin-top: 5px; letter-spacing: .04em; font-weight: 700; }
+  .cell.on { background: var(--indigo); border-color: var(--indigo); }
+  .cell.on .kk, .cell.on .rr { color: #fff; }
+
+  .detail {
+    margin-top: 16px; background: var(--card); border: 1px solid var(--card-edge);
+    border-radius: var(--r); padding: 18px; display: flex; gap: 18px; align-items: center;
+    min-height: 108px;
+  }
+  .detail .big { font-family: var(--font-kana); font-size: 56px; line-height: 1; font-weight: 600; flex: none; width: 74px; text-align: center; }
+  .detail .info b { font-size: 20px; letter-spacing: .05em; }
+  .detail .info .rom { color: var(--vermil); font-weight: 800; }
+  .detail .info p { margin: 6px 0 0; color: var(--ink-soft); font-size: 13.5px; }
+  .detail .hint-empty { color: var(--ink-soft); font-size: 14px; }
+  .speak {
+    margin-left: auto; flex: none; border: none; background: var(--vermil); color: #fff;
+    width: 46px; height: 46px; border-radius: 50%; cursor: pointer; font-size: 20px;
+    display: grid; place-items: center; box-shadow: 0 4px 12px var(--shadow); transition: transform .1s;
+  }
+  .speak:active { transform: scale(.9); }
+  .speak:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  /* ---------- 閃卡 ---------- */
+  .flash-area { display: grid; place-items: center; gap: 18px; padding: 8px 0; }
+  .fcard {
+    width: min(280px, 82vw); aspect-ratio: 3/4; perspective: 1200px; cursor: pointer; border: none; background: none; padding: 0;
+  }
+  .fcard:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; border-radius: 18px; }
+  .fcard .inner { position: relative; width: 100%; height: 100%; transition: transform .5s; transform-style: preserve-3d; }
+  .fcard.flip .inner { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; backface-visibility: hidden; border-radius: 18px;
+    display: grid; place-items: center; box-shadow: 0 10px 30px var(--shadow); border: 1px solid var(--card-edge);
+  }
+  .face.front { background: var(--card); }
+  .face.front .kk { font-family: var(--font-kana); font-size: 108px; font-weight: 600; line-height: 1; }
+  .face.front .tap { position: absolute; bottom: 16px; font-size: 12px; color: var(--ink-soft); }
+  .face.back { background: var(--indigo); color: #fff; transform: rotateY(180deg); flex-direction: column; }
+  .face.back .rom { font-size: 60px; font-weight: 800; letter-spacing: .04em; }
+  .face.back .lbl { font-size: 13px; opacity: .8; margin-top: 6px; }
+  .flash-ctrl { display: flex; gap: 10px; }
+  .btn {
+    border: none; border-radius: 12px; padding: 12px 20px; font: inherit; font-weight: 700;
+    font-size: 15px; cursor: pointer; transition: transform .1s, filter .15s;
+  }
+  .btn:active { transform: scale(.96); }
+  .btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .btn.ghost { background: var(--card); border: 1.5px solid var(--card-edge); color: var(--ink-soft); }
+  .btn.know { background: var(--good); color: #fff; }
+  .btn.dunno { background: var(--card); border: 1.5px solid var(--vermil); color: var(--vermil); }
+  .flash-count { color: var(--ink-soft); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- 測驗 ---------- */
+  .quiz { display: grid; gap: 16px; }
+  .quiz-top { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { flex: 1; height: 9px; background: var(--card-edge); border-radius: 999px; overflow: hidden; }
+  .progress-bar i { display: block; height: 100%; background: var(--indigo); width: 0; transition: width .3s; }
+  .combo { font-weight: 800; color: var(--vermil); font-size: 14px; font-variant-numeric: tabular-nums; min-width: 62px; text-align: right; }
+  .prompt {
+    position: relative; background: var(--card); border: 1px solid var(--card-edge); border-radius: var(--r);
+    padding: 34px 18px; text-align: center; box-shadow: 0 6px 20px var(--shadow); overflow: hidden;
+  }
+  .prompt .ask { font-size: 12.5px; color: var(--ink-soft); letter-spacing: .1em; text-transform: uppercase; }
+  .prompt .q { font-family: var(--font-kana); font-size: clamp(56px, 18vw, 92px); font-weight: 600; line-height: 1.05; margin-top: 4px; }
+  .prompt.romaji-q .q { font-family: var(--font-ui); font-weight: 800; letter-spacing: .05em; }
+  .stamp {
+    position: absolute; top: 50%; left: 50%; width: 118px; height: 118px; border-radius: 50%;
+    border: 5px solid var(--vermil); color: var(--vermil); display: grid; place-items: center;
+    font-family: var(--font-kana); font-size: 60px; font-weight: 700;
+    transform: translate(-50%,-50%) scale(0) rotate(-18deg); opacity: 0; pointer-events: none;
+  }
+  .stamp.show { animation: stamp .5s cubic-bezier(.2,1.4,.4,1) forwards; }
+  @keyframes stamp { 0%{transform:translate(-50%,-50%) scale(1.7) rotate(-18deg);opacity:0} 40%{opacity:.95} 100%{transform:translate(-50%,-50%) scale(1) rotate(-12deg);opacity:.92} }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .opt {
+    padding: 18px 10px; border: 1.5px solid var(--card-edge); background: var(--card); color: var(--ink);
+    border-radius: 12px; font: inherit; font-weight: 800; font-size: 22px; cursor: pointer;
+    transition: .12s; font-variant-numeric: tabular-nums;
+  }
+  .opt .oj { font-family: var(--font-kana); font-size: 30px; }
+  .opt:hover:not(:disabled) { border-color: var(--indigo); transform: translateY(-2px); }
+  .opt:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .opt.correct { background: var(--good); border-color: var(--good); color: #fff; }
+  .opt.wrong { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .shake { animation: shake .35s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-7px)} 40%,80%{transform:translateX(7px)} }
+  .quiz-msg { text-align: center; min-height: 22px; font-weight: 700; font-size: 14px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--ground); padding: 11px 20px; border-radius: 999px;
+    font-weight: 700; font-size: 14px; opacity: 0; pointer-events: none; transition: .3s; z-index: 50;
+    box-shadow: 0 8px 24px var(--shadow);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .rank-banner {
+    display: flex; align-items: center; gap: 12px; background: color-mix(in srgb, var(--gold) 16%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--card-edge)); border-radius: var(--r);
+    padding: 12px 16px; margin-bottom: 18px; font-size: 13.5px;
+  }
+  .rank-banner .r-emoji { font-size: 22px; }
+  .rank-banner b { color: var(--ink); }
+  .foot { text-align: center; color: var(--ink-soft); font-size: 12px; margin-top: 30px; line-height: 1.7; }
+
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<header>
+  <div class="bar">
+    <div class="brand">
+      <div class="seal">仮</div>
+      <div><b>かなクエスト</b><span>假名冒險 · N5</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat" title="連續答對"><span>🔥</span><span id="s-streak">0</span></div>
+      <div class="stat" title="累積經驗值"><span>⭐</span><span id="s-xp">0</span></div>
+      <div class="ring" title="今日目標" aria-label="今日目標進度">
+        <svg width="40" height="40"><circle cx="20" cy="20" r="16" fill="none" stroke="var(--card-edge)" stroke-width="4"/><circle id="ring-fg" cx="20" cy="20" r="16" fill="none" stroke="var(--gold)" stroke-width="4" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="100.5"/></svg>
+        <i id="ring-txt">0/20</i>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="rank-banner">
+    <span class="r-emoji" id="rank-emoji">🌱</span>
+    <div>目前段位：<b id="rank-name">假名新手</b> · <span id="rank-next"></span></div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-view="learn">學習<span class="jp">まなぶ</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-view="flash">閃卡<span class="jp">カード</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-view="quiz">測驗<span class="jp">クイズ</span></button>
+  </div>
+
+  <div class="groups" id="groups" aria-label="選擇練習範圍"></div>
+
+  <!-- 學習 -->
+  <section id="view-learn">
+    <div class="grid" id="chart"></div>
+    <div class="detail" id="detail">
+      <div class="hint-empty">👆 點任一個假名，聽發音、看記憶口訣。</div>
+    </div>
+  </section>
+
+  <!-- 閃卡 -->
+  <section id="view-flash" hidden>
+    <div class="flash-area">
+      <button class="fcard" id="fcard" aria-label="翻牌">
+        <div class="inner">
+          <div class="face front"><span class="kk" id="f-kana">あ</span><span class="tap">點一下翻牌</span></div>
+          <div class="face back"><span class="rom" id="f-rom">a</span><span class="lbl">羅馬拼音</span></div>
+        </div>
+      </button>
+      <div class="flash-count" id="f-count"></div>
+      <div class="flash-ctrl">
+        <button class="btn dunno" id="f-dunno">還不會</button>
+        <button class="btn ghost" id="f-speak">🔊 發音</button>
+        <button class="btn know" id="f-know">記住了</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 測驗 -->
+  <section id="view-quiz" hidden>
+    <div class="quiz">
+      <div class="quiz-top">
+        <div class="progress-bar"><i id="q-prog"></i></div>
+        <div class="combo" id="q-combo"></div>
+      </div>
+      <div class="prompt" id="q-prompt">
+        <div class="ask" id="q-ask">這個假名怎麼唸？</div>
+        <div class="q" id="q-kana">あ</div>
+        <div class="stamp" id="q-stamp">正</div>
+      </div>
+      <div class="options" id="q-opts"></div>
+      <div class="quiz-msg" id="q-msg"></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    かなクエスト · 為 JLPT N5 打好五十音地基 ·<br>
+    點假名可用瀏覽器內建日語語音發音（部分裝置需開啟語音功能）。進度會自動存在本機。
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ===================== 資料：五十音 ===================== */
+// group: hs=平假名清音, ks=片假名清音, hd=濁音半濁音, hy=拗音
+const HS = [
+  ['あ','a','像「安」草寫'],['い','i','兩撇，像「以」'],['う','u','像「宇」的上半'],['え','e','像「衣」'],['お','o','像「於」，右上一點'],
+  ['か','ka','「加」的左半＋一點'],['き','ki','像鑰匙 key'],['く','ku','像鳥嘴'],['け','ke','「計」的左半'],['こ','ko','兩橫，像「己」'],
+  ['さ','sa','像「左」'],['し','shi','一勾到底，像釣竿'],['す','su','像打結的繩'],['せ','se','像「世」'],['そ','so','像閃電'],
+  ['た','ta','像「太」'],['ち','chi','像數字 5 反過來'],['つ','tsu','像海浪／微笑'],['て','te','像「天」的一撇'],['と','to','像被釘子刺的腳趾 toe'],
+  ['な','na','像「奈」'],['に','ni','兩豎，像「二」ni'],['ぬ','nu','像麵條打結 noodle'],['ね','ne','有圈圈，像貓尾'],['の','no','一圈，像禁止符號 no'],
+  ['は','ha','有個 h 的直豎'],['ひ','hi','像笑臉 hi'],['ふ','fu','像富士山 Fuji'],['へ','he','一個小山坡'],['ほ','ho','は 多一橫'],
+  ['ま','ma','像「馬」打結'],['み','mi','像數字 21，「見」'],['む','mu','像牛叫 moo'],['め','me','像「目」me'],['も','mo','像魚鉤'],
+  ['や','ya','像 yak 的角'],['ゆ','yu','像魚 yu'],['よ','yo','像溜溜球 yo-yo'],
+  ['ら','ra','像躺著的人'],['り','ri','兩筆，像 river 兩岸'],['る','ru','尾巴打結的 route'],['れ','re','像 running 的腳'],['ろ','ro','像 road 轉彎'],
+  ['わ','wa','像張嘴 wow'],['を','wo','受詞助詞，唸 o'],['ん','n','唯一鼻音 n'],
+];
+const KS = [
+  ['ア','a'],['イ','i'],['ウ','u'],['エ','e'],['オ','o'],
+  ['カ','ka'],['キ','ki'],['ク','ku'],['ケ','ke'],['コ','ko'],
+  ['サ','sa'],['シ','shi'],['ス','su'],['セ','se'],['ソ','so'],
+  ['タ','ta'],['チ','chi'],['ツ','tsu'],['テ','te'],['ト','to'],
+  ['ナ','na'],['ニ','ni'],['ヌ','nu'],['ネ','ne'],['ノ','no'],
+  ['ハ','ha'],['ヒ','hi'],['フ','fu'],['ヘ','he'],['ホ','ho'],
+  ['マ','ma'],['ミ','mi'],['ム','mu'],['メ','me'],['モ','mo'],
+  ['ヤ','ya'],['ユ','yu'],['ヨ','yo'],
+  ['ラ','ra'],['リ','ri'],['ル','ru'],['レ','re'],['ロ','ro'],
+  ['ワ','wa'],['ヲ','wo'],['ン','n'],
+];
+const HD = [
+  ['が','ga'],['ぎ','gi'],['ぐ','gu'],['げ','ge'],['ご','go'],
+  ['ざ','za'],['じ','ji'],['ず','zu'],['ぜ','ze'],['ぞ','zo'],
+  ['だ','da'],['ぢ','ji'],['づ','zu'],['で','de'],['ど','do'],
+  ['ば','ba'],['び','bi'],['ぶ','bu'],['べ','be'],['ぼ','bo'],
+  ['ぱ','pa'],['ぴ','pi'],['ぷ','pu'],['ぺ','pe'],['ぽ','po'],
+];
+const HY = [
+  ['きゃ','kya'],['きゅ','kyu'],['きょ','kyo'],
+  ['しゃ','sha'],['しゅ','shu'],['しょ','sho'],
+  ['ちゃ','cha'],['ちゅ','chu'],['ちょ','cho'],
+  ['にゃ','nya'],['にゅ','nyu'],['にょ','nyo'],
+  ['ひゃ','hya'],['ひゅ','hyu'],['ひょ','hyo'],
+  ['みゃ','mya'],['みゅ','myu'],['みょ','myo'],
+  ['りゃ','rya'],['りゅ','ryu'],['りょ','ryo'],
+  ['ぎゃ','gya'],['ぎゅ','gyu'],['ぎょ','gyo'],
+  ['じゃ','ja'],['じゅ','ju'],['じょ','jo'],
+  ['びゃ','bya'],['びゅ','byu'],['びょ','byo'],
+  ['ぴゃ','pya'],['ぴゅ','pyu'],['ぴょ','pyo'],
+];
+const GROUPS = {
+  hs: { name:'平假名 清音', data: HS, cols:5, layout:'gojuon' },
+  ks: { name:'片假名 清音', data: KS, cols:5, layout:'gojuon' },
+  hd: { name:'濁音・半濁音', data: HD, cols:5, layout:'plain' },
+  hy: { name:'拗音', data: HY, cols:3, layout:'plain' },
+};
+
+/* ===================== 進度（localStorage） ===================== */
+const KEY = 'kanaQuest.v1';
+const today = () => new Date().toISOString().slice(0,10);
+let P = load();
+function load(){
+  let d = {};
+  try { d = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){}
+  d.xp = d.xp || 0; d.best = d.best || 0; d.correct = d.correct || 0;
+  if (d.dailyDate !== today()) { d.dailyDate = today(); d.dailyCount = 0; }
+  d.dailyCount = d.dailyCount || 0;
+  return d;
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(P)); } catch(e){} }
+
+const RANKS = [
+  [0,'假名新手','🌱'],[150,'假名見習','📖'],[400,'假名冒險者','🗺️'],
+  [800,'假名達人','🎴'],[1500,'假名忍者','🥷'],[2600,'假名大師','🏯'],
+];
+function rank(xp){ let r=RANKS[0]; for(const x of RANKS){ if(xp>=x[0]) r=x; } return r; }
+function nextRank(xp){ for(const x of RANKS){ if(xp<x[0]) return x; } return null; }
+
+/* ===================== 語音發音 ===================== */
+let jaVoice = null;
+function pickVoice(){
+  const vs = speechSynthesis.getVoices();
+  jaVoice = vs.find(v=>/ja[-_]?JP/i.test(v.lang)) || vs.find(v=>/^ja/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(kana){
+  if(!('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(kana);
+    u.lang = 'ja-JP'; if(jaVoice) u.voice = jaVoice; u.rate = .8;
+    speechSynthesis.speak(u);
+  } catch(e){}
+}
+
+/* ===================== 狀態 ===================== */
+let selected = new Set(['hs']);   // 選中的群組
+let streak = 0;
+const $ = id => document.getElementById(id);
+
+/* ===================== 頁首更新 ===================== */
+function renderStats(){
+  $('s-streak').textContent = streak;
+  $('s-xp').textContent = P.xp;
+  const goal = 20, off = 100.5 * (1 - Math.min(P.dailyCount,goal)/goal);
+  $('ring-fg').style.strokeDashoffset = off;
+  $('ring-txt').textContent = Math.min(P.dailyCount,goal)+'/'+goal;
+  const r = rank(P.xp), nx = nextRank(P.xp);
+  $('rank-emoji').textContent = r[2]; $('rank-name').textContent = r[1];
+  $('rank-next').textContent = nx ? ('再 '+(nx[0]-P.xp)+' XP 升「'+nx[1]+'」') : '已達最高段位！🎉';
+}
+
+/* ===================== 目前題庫 ===================== */
+function pool(){
+  let arr = [];
+  for(const g of selected) arr = arr.concat(GROUPS[g].data.map(x=>({k:x[0], r:x[1]})));
+  // 去除純重複（例如 じ/ぢ 同拼音仍保留為不同卡）
+  return arr;
+}
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),1400);
+}
+
+/* ===================== 群組晶片 ===================== */
+function renderGroups(){
+  const box = $('groups'); box.innerHTML='';
+  for(const key in GROUPS){
+    const b=document.createElement('button');
+    b.className='chip'; b.textContent=GROUPS[key].name;
+    b.setAttribute('aria-pressed', selected.has(key));
+    b.onclick=()=>{
+      if(selected.has(key)){ if(selected.size>1) selected.delete(key); }
+      else selected.add(key);
+      renderGroups(); onGroupChange();
+    };
+    box.appendChild(b);
+  }
+}
+function onGroupChange(){
+  renderChart(); resetFlash(); newQuestion();
+}
+
+/* ===================== 學習：字表 ===================== */
+function renderChart(){
+  const chart=$('chart');
+  // 學習模式只顯示「選中的第一個」群組，避免太雜
+  const key = [...selected][0];
+  const g = GROUPS[key];
+  chart.style.gridTemplateColumns = `repeat(${g.cols}, 1fr)`;
+  chart.innerHTML='';
+  const items = g.layout==='gojuon' ? gojuonLayout(g.data) : g.data.map(x=>({k:x[0],r:x[1],h:x[2]}));
+  for(const it of items){
+    const c=document.createElement('button'); c.className='cell';
+    if(!it){ c.classList.add('empty'); c.disabled=true; chart.appendChild(c); continue; }
+    c.innerHTML=`<span class="kk">${it.k}</span><span class="rr">${it.r}</span>`;
+    c.onclick=()=>{ document.querySelectorAll('.cell.on').forEach(e=>e.classList.remove('on'));
+      c.classList.add('on'); showDetail(it); speak(it.k); };
+    chart.appendChild(c);
+  }
+  $('detail').innerHTML='<div class="hint-empty">👆 點任一個假名，聽發音、看記憶口訣。</div>';
+}
+// 把清音排成 5 欄五十音矩陣（補空格對齊）
+function gojuonLayout(data){
+  const map={}; data.forEach(d=>map[d[1]]=d);
+  const rows=[['a','i','u','e','o'],['ka','ki','ku','ke','ko'],['sa','shi','su','se','so'],
+    ['ta','chi','tsu','te','to'],['na','ni','nu','ne','no'],['ha','hi','fu','he','ho'],
+    ['ma','mi','mu','me','mo'],['ya',null,'yu',null,'yo'],['ra','ri','ru','re','ro'],
+    ['wa',null,null,null,'wo'],[null,null,'n',null,null]];
+  const out=[];
+  for(const row of rows) for(const r of row){
+    if(r && map[r]) out.push({k:map[r][0], r:map[r][1], h:map[r][2]});
+    else out.push(null);
+  }
+  return out;
+}
+function showDetail(it){
+  $('detail').innerHTML =
+    `<div class="big">${it.k}</div>
+     <div class="info"><b>唸作 <span class="rom">${it.r}</span></b>
+       <p>${it.h ? '💡 '+it.h : '多唸幾次、跟著手寫，很快就記住！'}</p></div>
+     <button class="speak" aria-label="發音">🔊</button>`;
+  $('detail').querySelector('.speak').onclick=()=>speak(it.k);
+}
+
+/* ===================== 閃卡 ===================== */
+let deck=[], di=0;
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
+function resetFlash(){ deck=shuffle(pool()); di=0; showCard(); }
+function showCard(){
+  if(!deck.length) return;
+  const card=deck[di%deck.length];
+  $('fcard').classList.remove('flip');
+  $('f-kana').textContent=card.k; $('f-rom').textContent=card.r;
+  $('f-count').textContent=`第 ${ (di%deck.length)+1 } / ${deck.length} 張`;
+}
+$('fcard').onclick=()=>$('fcard').classList.toggle('flip');
+$('f-speak').onclick=()=>speak(deck[di%deck.length].k);
+$('f-know').onclick=()=>{ addXP(2); toast('記住了 +2 XP 👍'); nextCard(); };
+$('f-dunno').onclick=()=>{ speak(deck[di%deck.length].k); nextCard(); };
+function nextCard(){ di++; if(di%deck.length===0) deck=shuffle(deck); showCard(); }
+
+/* ===================== 測驗 ===================== */
+let cur=null, mode='k2r', locked=false;
+function newQuestion(){
+  const p=pool(); if(p.length<4){ return; }
+  locked=false;
+  cur = p[Math.random()*p.length|0];
+  mode = Math.random()<0.5 ? 'k2r' : 'r2k';   // 假名→拼音 或 拼音→假名
+  const prompt=$('q-prompt');
+  $('q-stamp').classList.remove('show');
+  $('q-msg').textContent=''; $('q-msg').style.color='';
+  if(mode==='k2r'){
+    prompt.classList.remove('romaji-q');
+    $('q-ask').textContent='這個假名怎麼唸？';
+    $('q-kana').textContent=cur.k;
+  } else {
+    prompt.classList.add('romaji-q');
+    $('q-ask').textContent='哪個是「'+cur.r+'」？';
+    $('q-kana').textContent=cur.r;
+  }
+  // 選項
+  const correct = mode==='k2r' ? cur.r : cur.k;
+  const opts=new Set([correct]);
+  const bag=p.slice();
+  while(opts.size<4 && bag.length){
+    const cand=bag[Math.random()*bag.length|0];
+    opts.add(mode==='k2r'?cand.r:cand.k);
+  }
+  const list=shuffle([...opts]);
+  const box=$('q-opts'); box.innerHTML='';
+  list.forEach(o=>{
+    const b=document.createElement('button'); b.className='opt';
+    b.innerHTML = mode==='k2r' ? o : `<span class="oj">${o}</span>`;
+    b.onclick=()=>answer(b,o,correct);
+    box.appendChild(b);
+  });
+  updateProg();
+}
+function answer(btn,chosen,correct){
+  if(locked) return; locked=true;
+  const buttons=[...$('q-opts').children];
+  if(chosen===correct){
+    btn.classList.add('correct');
+    streak++; if(streak>P.best) P.best=streak;
+    const bonus = streak>=3 ? Math.min(streak,8) : 0;
+    addXP(10+bonus); P.correct++; P.dailyCount++;
+    if(mode==='k2r') speak(cur.k);
+    $('q-stamp').classList.add('show');
+    $('q-msg').style.color='var(--good)';
+    $('q-msg').textContent = streak>=3 ? `太強了！連勝 ${streak} 🔥 (+${10+bonus} XP)` : '答對！+10 XP';
+    if(P.dailyCount===20) toast('🎉 達成今日目標！你超讚！');
+    save(); renderStats();
+    setTimeout(newQuestion, 850);
+  } else {
+    btn.classList.add('wrong'); btn.classList.add('shake');
+    streak=0;
+    buttons.forEach(b=>{
+      const v = mode==='k2r'? b.textContent : b.querySelector('.oj').textContent;
+      if(v===correct) b.classList.add('correct');
+    });
+    if(mode==='k2r') speak(cur.k);
+    $('q-msg').style.color='var(--bad)';
+    $('q-msg').textContent = mode==='k2r'
+      ? `「${cur.k}」唸作 ${cur.r}，再記一次！`
+      : `「${cur.r}」是 ${cur.k}，加油！`;
+    save(); renderStats();
+    setTimeout(newQuestion, 1600);
+  }
+  buttons.forEach(b=>b.disabled=true);
+  updateProg();
+}
+function addXP(n){ P.xp+=n; save(); renderStats(); }
+function updateProg(){
+  $('q-combo').textContent = streak>1 ? ('🔥 x'+streak) : '';
+  const goal=20; $('q-prog').style.width = Math.min(100, P.dailyCount/goal*100)+'%';
+}
+
+/* ===================== 分頁切換 ===================== */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t));
+    const v=t.dataset.view;
+    $('view-learn').hidden = v!=='learn';
+    $('view-flash').hidden = v!=='flash';
+    $('view-quiz').hidden  = v!=='quiz';
+    if(v==='flash') resetFlash();
+    if(v==='quiz') newQuestion();
+  };
+});
+
+/* ===================== 啟動 ===================== */
+renderGroups(); renderChart(); renderStats(); resetFlash(); newQuestion();
+</script>
