@@ -63,6 +63,25 @@
   .topics button { flex:0 0 auto; padding:8px 15px; border-radius:10px; border:1.5px solid var(--card-edge); background:transparent;
     color:var(--ink-soft); font:inherit; font-weight:600; font-size:13px; cursor:pointer; transition:.15s; white-space:nowrap; }
   .topics button[aria-pressed="true"] { background:color-mix(in srgb,var(--indigo) 15%, transparent); border-color:var(--indigo); color:var(--indigo); font-weight:800; }
+  .topics button.locked { opacity:.5; cursor:not-allowed; }
+  .topics button.passed { border-color:var(--good); color:var(--good); }
+
+  #lesson-bar:empty { display:none; }
+  #lesson-bar { margin-bottom:14px; }
+  .lesson-cta { width:100%; display:flex; align-items:center; gap:12px; background:color-mix(in srgb,var(--vermil) 10%, var(--card));
+    border:1.5px solid var(--vermil); border-radius:12px; padding:13px 15px; }
+  .lesson-cta.done { background:color-mix(in srgb,var(--good) 12%, var(--card)); border-color:var(--good); }
+  .lesson-cta .lc-txt { font-size:13.5px; font-weight:700; line-height:1.5; }
+  .lesson-cta .lc-txt small { display:block; font-weight:600; color:var(--ink-soft); font-size:12px; margin-top:1px; }
+  .lesson-cta button { margin-left:auto; flex:none; border:none; background:var(--vermil); color:#fff; border-radius:10px;
+    padding:10px 16px; font:inherit; font-weight:800; font-size:14px; cursor:pointer; white-space:nowrap; }
+  .lesson-cta.done .lc-badge { margin-left:auto; color:var(--good); font-weight:800; font-size:14px; white-space:nowrap; }
+
+  .test-result { text-align:center; padding:8px 0; }
+  .test-result .tr-emoji { font-size:52px; line-height:1; }
+  .test-result .tr-score { font-size:22px; font-weight:800; margin-top:8px; font-variant-numeric:tabular-nums; }
+  .test-result .tr-sub { color:var(--ink-soft); font-size:13.5px; margin-top:4px; }
+  .test-result .tr-actions { display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
 
   .learn-hint { color:var(--ink-soft); font-size:13px; margin:0 0 12px; }
 
@@ -301,8 +320,8 @@
     <div class="ov-guide">
       <b>怎麼用這個網站？</b><br>
       1. 完全新手：先在「學習 → 五十音」把平假名點熟（有發音＋口訣）。<br>
-      2. 用「測驗」邊玩邊記，答錯的字會自動進「弱點」，可一鍵重練。<br>
-      3. 假名穩了，再開「單字」「文法」的主題。<br>
+      2. <b>單字採闖關</b>：一課一課解鎖，讀熟後在該課按「開始測驗」，答對 80% 就解鎖下一課（可當每天一課）。<br>
+      3. 答錯的字會自動進「弱點」，可一鍵重練；文法隨時可查。<br>
       進度條代表「至少答對過一次」的比例，越滿代表你越熟。每天填滿上方金色目標圈就先給自己拍拍手 👏
     </div>
   </section>
@@ -310,6 +329,7 @@
   <!-- 學習 -->
   <section id="view-learn" hidden>
     <p class="learn-hint" id="learn-hint"></p>
+    <div id="lesson-bar"></div>
     <div class="grid" id="chart"></div>
     <div class="vlist" id="vlist" hidden></div>
     <div class="glist" id="glist" hidden></div>
@@ -442,20 +462,17 @@ const HY = [
   ['ぴゃ','pya'],['ぴゅ','pyu'],['ぴょ','pyo'],
 ];
 /* ===================== 單字 ===================== */
-const V_NUM=[['一','いち','一'],['二','に','二'],['三','さん','三'],['四','よん','四'],['五','ご','五'],['六','ろく','六'],['七','なな','七'],['八','はち','八'],['九','きゅう','九'],['十','じゅう','十'],['百','ひゃく','（一）百'],['千','せん','（一）千'],['万','まん','（一）萬']];
-const V_TIME=[['今','いま','現在'],['今日','きょう','今天'],['明日','あした','明天'],['昨日','きのう','昨天'],['朝','あさ','早上'],['昼','ひる','中午'],['夜','よる','晚上'],['毎日','まいにち','每天'],['時間','じかん','時間'],['週末','しゅうまつ','週末'],['午前','ごぜん','上午'],['午後','ごご','下午']];
-const V_WEEK=[['月曜日','げつようび','星期一'],['火曜日','かようび','星期二'],['水曜日','すいようび','星期三'],['木曜日','もくようび','星期四'],['金曜日','きんようび','星期五'],['土曜日','どようび','星期六'],['日曜日','にちようび','星期日']];
-const V_PEOPLE=[['人','ひと','人'],['私','わたし','我'],['友達','ともだち','朋友'],['先生','せんせい','老師'],['学生','がくせい','學生'],['子供','こども','小孩'],['父','ちち','（我）爸爸'],['母','はは','（我）媽媽'],['兄','あに','（我）哥哥'],['姉','あね','（我）姊姊'],['男','おとこ','男人'],['女','おんな','女人'],['名前','なまえ','名字']];
-const V_FOOD=[['水','みず','水'],['お茶','おちゃ','茶'],['ご飯','ごはん','飯'],['肉','にく','肉'],['魚','さかな','魚'],['卵','たまご','蛋'],['野菜','やさい','蔬菜'],['果物','くだもの','水果'],['牛乳','ぎゅうにゅう','牛奶'],['パン','パン','麵包'],['りんご','りんご','蘋果'],['お酒','おさけ','酒']];
-const V_DAILY=[['家','いえ','家'],['学校','がっこう','學校'],['車','くるま','車'],['電車','でんしゃ','電車'],['本','ほん','書'],['店','みせ','店'],['駅','えき','車站'],['会社','かいしゃ','公司'],['電話','でんわ','電話'],['時計','とけい','時鐘'],['お金','おかね','錢'],['天気','てんき','天氣']];
-const V_PLACE=[['病院','びょういん','醫院'],['銀行','ぎんこう','銀行'],['郵便局','ゆうびんきょく','郵局'],['図書館','としょかん','圖書館'],['公園','こうえん','公園'],['デパート','デパート','百貨公司'],['スーパー','スーパー','超市'],['レストラン','レストラン','餐廳'],['トイレ','トイレ','廁所']];
-const V_COLOR=[['赤','あか','紅色'],['青','あお','藍色'],['白','しろ','白色'],['黒','くろ','黑色'],['黄色','きいろ','黃色'],['緑','みどり','綠色'],['茶色','ちゃいろ','咖啡色']];
-const V_BODY=[['目','め','眼睛'],['耳','みみ','耳朵'],['口','くち','嘴巴'],['鼻','はな','鼻子'],['手','て','手'],['足','あし','腳'],['頭','あたま','頭'],['顔','かお','臉']];
-const V_POS=[['上','うえ','上面'],['下','した','下面'],['前','まえ','前面'],['後ろ','うしろ','後面'],['中','なか','裡面'],['外','そと','外面'],['右','みぎ','右邊'],['左','ひだり','左邊'],['隣','となり','隔壁']];
-const V_NATURE=[['雨','あめ','雨'],['雪','ゆき','雪'],['風','かぜ','風'],['空','そら','天空'],['海','うみ','海'],['山','やま','山'],['川','かわ','河'],['花','はな','花'],['木','き','樹']];
-const V_QUES=[['何','なに','什麼'],['誰','だれ','誰'],['いつ','いつ','什麼時候'],['どこ','どこ','哪裡'],['どう','どう','如何'],['いくら','いくら','多少錢'],['なぜ','なぜ','為什麼']];
-const V_VERB=[['食べる','たべる','吃'],['飲む','のむ','喝'],['見る','みる','看'],['聞く','きく','聽／問'],['行く','いく','去'],['来る','くる','來'],['帰る','かえる','回去'],['する','する','做'],['買う','かう','買'],['読む','よむ','讀'],['書く','かく','寫'],['話す','はなす','說（話）'],['起きる','おきる','起床'],['寝る','ねる','睡覺']];
-const V_ADJ=[['大きい','おおきい','大的'],['小さい','ちいさい','小的'],['高い','たかい','高的／貴的'],['安い','やすい','便宜的'],['新しい','あたらしい','新的'],['古い','ふるい','舊的'],['暑い','あつい','熱的（天氣）'],['寒い','さむい','冷的（天氣）'],['おいしい','おいしい','好吃的'],['面白い','おもしろい','有趣的'],['いい','いい','好的'],['悪い','わるい','壞的']];
+// N5 單字：課程制（每課混合名詞/動詞/形容詞/疑問詞，由淺入深）
+const LES1=[['人','ひと','人'],['私','わたし','我'],['友達','ともだち','朋友'],['先生','せんせい','老師'],['学生','がくせい','學生'],['子供','こども','小孩'],['父','ちち','（我）爸爸'],['母','はは','（我）媽媽'],['兄','あに','（我）哥哥'],['姉','あね','（我）姊姊'],['男','おとこ','男人'],['女','おんな','女人'],['名前','なまえ','名字'],['誰','だれ','誰'],['いい','いい','好的'],['悪い','わるい','壞的']];
+const LES2=[['一','いち','一'],['二','に','二'],['三','さん','三'],['四','よん','四'],['五','ご','五'],['六','ろく','六'],['七','なな','七'],['八','はち','八'],['九','きゅう','九'],['十','じゅう','十'],['百','ひゃく','（一）百'],['千','せん','（一）千'],['万','まん','（一）萬'],['何','なに','什麼'],['いくら','いくら','多少錢']];
+const LES3=[['今','いま','現在'],['今日','きょう','今天'],['明日','あした','明天'],['昨日','きのう','昨天'],['朝','あさ','早上'],['昼','ひる','中午'],['夜','よる','晚上'],['毎日','まいにち','每天'],['時間','じかん','時間'],['週末','しゅうまつ','週末'],['午前','ごぜん','上午'],['午後','ごご','下午'],['いつ','いつ','什麼時候'],['起きる','おきる','起床'],['寝る','ねる','睡覺']];
+const LES4=[['月曜日','げつようび','星期一'],['火曜日','かようび','星期二'],['水曜日','すいようび','星期三'],['木曜日','もくようび','星期四'],['金曜日','きんようび','星期五'],['土曜日','どようび','星期六'],['日曜日','にちようび','星期日'],['する','する','做'],['行く','いく','去'],['来る','くる','來'],['帰る','かえる','回去'],['家','いえ','家'],['学校','がっこう','學校'],['会社','かいしゃ','公司'],['どう','どう','如何']];
+const LES5=[['水','みず','水'],['お茶','おちゃ','茶'],['ご飯','ごはん','飯'],['肉','にく','肉'],['魚','さかな','魚'],['卵','たまご','蛋'],['野菜','やさい','蔬菜'],['果物','くだもの','水果'],['牛乳','ぎゅうにゅう','牛奶'],['パン','パン','麵包'],['りんご','りんご','蘋果'],['お酒','おさけ','酒'],['食べる','たべる','吃'],['飲む','のむ','喝'],['買う','かう','買'],['おいしい','おいしい','好吃的']];
+const LES6=[['病院','びょういん','醫院'],['銀行','ぎんこう','銀行'],['郵便局','ゆうびんきょく','郵局'],['図書館','としょかん','圖書館'],['公園','こうえん','公園'],['デパート','デパート','百貨公司'],['スーパー','スーパー','超市'],['レストラン','レストラン','餐廳'],['トイレ','トイレ','廁所'],['店','みせ','店'],['駅','えき','車站'],['車','くるま','車'],['電車','でんしゃ','電車'],['どこ','どこ','哪裡']];
+const LES7=[['本','ほん','書'],['電話','でんわ','電話'],['時計','とけい','時鐘'],['お金','おかね','錢'],['天気','てんき','天氣'],['見る','みる','看'],['聞く','きく','聽／問'],['読む','よむ','讀'],['書く','かく','寫'],['話す','はなす','說（話）'],['面白い','おもしろい','有趣的'],['高い','たかい','高的／貴的'],['安い','やすい','便宜的'],['なぜ','なぜ','為什麼']];
+const LES8=[['赤','あか','紅色'],['青','あお','藍色'],['白','しろ','白色'],['黒','くろ','黑色'],['黄色','きいろ','黃色'],['緑','みどり','綠色'],['茶色','ちゃいろ','咖啡色'],['大きい','おおきい','大的'],['小さい','ちいさい','小的'],['新しい','あたらしい','新的'],['古い','ふるい','舊的']];
+const LES9=[['目','め','眼睛'],['耳','みみ','耳朵'],['口','くち','嘴巴'],['鼻','はな','鼻子'],['手','て','手'],['足','あし','腳'],['頭','あたま','頭'],['顔','かお','臉'],['上','うえ','上面'],['下','した','下面'],['前','まえ','前面'],['後ろ','うしろ','後面'],['中','なか','裡面'],['外','そと','外面'],['右','みぎ','右邊'],['左','ひだり','左邊'],['隣','となり','隔壁']];
+const LES10=[['雨','あめ','雨'],['雪','ゆき','雪'],['風','かぜ','風'],['空','そら','天空'],['海','うみ','海'],['山','やま','山'],['川','かわ','河'],['花','はな','花'],['木','き','樹'],['暑い','あつい','熱的（天氣）'],['寒い','さむい','冷的（天氣）']];
 
 /* ===================== 文法 ===================== */
 const GP_PART=[
@@ -522,20 +539,16 @@ const GROUPS = {
   ks:{ name:'片假名 清音', type:'kana', data:KS, cols:5, layout:'gojuon' },
   hd:{ name:'濁音・半濁音', type:'kana', data:HD, cols:5, layout:'plain' },
   hy:{ name:'拗音',        type:'kana', data:HY, cols:3, layout:'plain' },
-  vnum:{ name:'數字', type:'vocab', data:V_NUM },
-  vtime:{ name:'時間', type:'vocab', data:V_TIME },
-  vweek:{ name:'星期', type:'vocab', data:V_WEEK },
-  vppl:{ name:'人與家庭', type:'vocab', data:V_PEOPLE },
-  vfood:{ name:'食物', type:'vocab', data:V_FOOD },
-  vday:{ name:'日常用品', type:'vocab', data:V_DAILY },
-  vplace:{ name:'場所', type:'vocab', data:V_PLACE },
-  vcolor:{ name:'顏色', type:'vocab', data:V_COLOR },
-  vbody:{ name:'身體', type:'vocab', data:V_BODY },
-  vpos:{ name:'方位', type:'vocab', data:V_POS },
-  vnature:{ name:'天氣自然', type:'vocab', data:V_NATURE },
-  vques:{ name:'疑問詞', type:'vocab', data:V_QUES },
-  vverb:{ name:'動詞', type:'vocab', data:V_VERB },
-  vadj:{ name:'形容詞', type:'vocab', data:V_ADJ },
+  les1:{ name:'第1課 人與自己', type:'vocab', data:LES1 },
+  les2:{ name:'第2課 數字', type:'vocab', data:LES2 },
+  les3:{ name:'第3課 時間・作息', type:'vocab', data:LES3 },
+  les4:{ name:'第4課 一週・外出', type:'vocab', data:LES4 },
+  les5:{ name:'第5課 飲食', type:'vocab', data:LES5 },
+  les6:{ name:'第6課 場所・交通', type:'vocab', data:LES6 },
+  les7:{ name:'第7課 日常・動作', type:'vocab', data:LES7 },
+  les8:{ name:'第8課 顏色・大小', type:'vocab', data:LES8 },
+  les9:{ name:'第9課 身體・方位', type:'vocab', data:LES9 },
+  les10:{ name:'第10課 天氣・自然', type:'vocab', data:LES10 },
   gpart:{ name:'助詞', type:'grammar', points:GP_PART },
   gconj:{ name:'動詞・形容詞・句型', type:'grammar', points:GP_CONJ },
 };
@@ -564,6 +577,7 @@ function load(){
   if(d.dailyDate!==today()){ d.dailyDate=today(); d.dailyCount=0; }
   d.dailyCount=d.dailyCount||0;
   d.stats=d.stats||{};
+  d.passed=d.passed||{};   // 已通過測驗的課
   d.theme=d.theme||'auto';
   d.sound = d.sound!==false;
   return d;
@@ -609,20 +623,30 @@ function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.ran
 /* ===================== 分類 / 主題選擇 ===================== */
 const CAT_LABEL={ kana:'🎴 五十音', vocab:'📚 單字', grammar:'✍️ 文法' };
 function catGroups(cat){ return Object.keys(GROUPS).filter(k=>GROUPS[k].type===cat); }
+// 單字採闖關：通過該課測驗才解鎖下一課
+function vocabLessons(){ return catGroups('vocab'); }
+function lessonPassed(key){ return !!P.passed[key]; }
+function lessonUnlocked(key){ const a=vocabLessons(), i=a.indexOf(key); return i<=0 || lessonPassed(a[i-1]); }
+function currentVocabLesson(){ const a=vocabLessons(); for(const k of a){ if(!lessonPassed(k)) return k; } return a[a.length-1]; }
 function renderPicker(){
   const seg=$('cat-seg'); seg.innerHTML='';
   for(const cat of ['kana','vocab','grammar']){
     const b=document.createElement('button'); b.dataset.cat=cat; b.textContent=CAT_LABEL[cat];
     b.setAttribute('aria-pressed', cat===activeCat);
-    b.onclick=()=>{ if(cat!==activeCat){ activeCat=cat; activeGroup=catGroups(cat)[0]; renderPicker(); onGroupChange(); } };
+    b.onclick=()=>{ if(cat!==activeCat){ activeCat=cat; activeGroup= cat==='vocab'?currentVocabLesson():catGroups(cat)[0]; renderPicker(); onGroupChange(); } };
     seg.appendChild(b);
   }
   const tp=$('topics'); tp.innerHTML='';
   for(const key of catGroups(activeCat)){
-    const b=document.createElement('button'); b.textContent=GROUPS[key].name;
+    const isVocab=GROUPS[key].type==='vocab';
+    const passed=isVocab&&lessonPassed(key), locked=isVocab&&!lessonUnlocked(key);
+    const b=document.createElement('button');
+    b.textContent=(passed?'✓ ':locked?'🔒 ':'')+GROUPS[key].name;
     b.setAttribute('aria-pressed', key===activeGroup);
-    b.onclick=()=>{ if(key!==activeGroup){ activeGroup=key; renderPicker(); onGroupChange();
-      const cur=tp.querySelector('[aria-pressed="true"]'); if(cur) cur.scrollIntoView({inline:'center',block:'nearest'}); } };
+    if(passed) b.classList.add('passed');
+    if(locked){ b.classList.add('locked'); b.disabled=true; b.title='通過前一課測驗才能解鎖'; }
+    else b.onclick=()=>{ if(key!==activeGroup){ activeGroup=key; renderPicker(); onGroupChange();
+      const c=tp.querySelector('[aria-pressed="true"]'); if(c) c.scrollIntoView({inline:'center',block:'nearest'}); } };
     tp.appendChild(b);
   }
 }
@@ -634,8 +658,18 @@ function renderLearn(){
   const t=firstType();
   $('chart').hidden=t!=='kana'; $('vlist').hidden=t!=='vocab'; $('glist').hidden=t!=='grammar';
   if(t==='kana'){ $('learn-hint').textContent='👆 點任一個假名，會在下方展開發音與記憶口訣（再點一次收合）。'; renderChart(); }
-  else if(t==='vocab'){ $('learn-hint').textContent='👆 點單字可聽發音。常認錯的會標上小紅點。'; renderVlist(); }
+  else if(t==='vocab'){ $('learn-hint').textContent='👆 點單字可聽發音。讀熟後按下方按鈕測驗，通過就解鎖下一課。'; renderVlist(); }
   else { $('learn-hint').textContent='👇 點開每條文法看講解與例句，再到「測驗」練填空。'; renderGlist(); }
+  renderLessonBar();
+}
+function renderLessonBar(){
+  const bar=$('lesson-bar');
+  if(firstType()!=='vocab'){ bar.innerHTML=''; return; }
+  const key=activeGroup, done=lessonPassed(key);
+  bar.innerHTML=`<div class="lesson-cta ${done?'done':''}"><div class="lc-txt">${done?'✅ 這課已通過':'📝 讀熟了嗎？'}`
+    +`<small>${done?'可自由複習，或再測一次':'測驗答對 80% 就解鎖下一課'}</small></div>`
+    +`<button id="start-test">${done?'重測':'開始測驗'}</button></div>`;
+  $('start-test').onclick=()=>startTest(key);
 }
 function renderChart(){
   const g=GROUPS[activeGroup]; curCols=g.cols;
@@ -707,35 +741,50 @@ $('f-dunno').onclick=()=>{ if(!deck.length) return; bumpStat(curCard().id,true);
 function nextCard(){ di++; if(di%deck.length===0) deck=shuffle(deck); showCard(); }
 
 /* ===================== 測驗 ===================== */
-let cur=null, mode='k2r', locked=false;
+let cur=null, mode='k2r', locked=false, test=null;
 function quizPool(){ return quizOverride&&quizOverride.length? quizOverride : pool(); }
+function startTest(key){
+  activeCat='vocab'; activeGroup=key; quizOverride=null;
+  test={ key, items:shuffle(itemsOf(key)), idx:0, correct:0 }; streak=0;
+  switchTo('quiz');
+}
 function newQuestion(){
-  const p=quizPool(); if(p.length<2){ $('q-ask').textContent='這個範圍題目不足，請多選一個範圍'; $('q-main').textContent='🙂'; $('q-opts').innerHTML=''; return; }
-  locked=false; cur=p[Math.random()*p.length|0];
+  const banner=$('weak-banner');
+  if(test){
+    if(test.idx>=test.items.length){ return renderTestResult(); }
+    banner.classList.add('show');
+    $('weak-banner-txt').textContent=`📝 ${GROUPS[test.key].name} 測驗 · 第 ${test.idx+1}/${test.items.length} 題（需 80%）`;
+    $('weak-clear').textContent='結束測驗';
+    locked=false; cur=test.items[test.idx]; renderQuestionFor(cur); updateProg(); return;
+  }
+  if(quizOverride&&quizOverride.length){ banner.classList.add('show'); $('weak-clear').textContent='回一般模式'; }
+  else banner.classList.remove('show');
+  const p=quizPool(); if(p.length<2){ $('q-ask').textContent='這個範圍題目不足'; $('q-main').textContent='🙂'; $('q-opts').innerHTML=''; return; }
+  locked=false; cur=p[Math.random()*p.length|0]; renderQuestionFor(cur); updateProg();
+}
+function renderQuestionFor(c){
   const prompt=$('q-prompt'); prompt.classList.remove('q-latin','q-sentence'); $('q-stamp').classList.remove('show');
   $('q-msg').textContent=''; $('q-msg').style.color='';
   let correct, optJP, options=null;
-  if(cur.type==='kana'){
+  if(c.type==='kana'){
     mode=Math.random()<0.5?'k2r':'r2k';
-    if(mode==='k2r'){ $('q-ask').textContent='這個假名怎麼唸？'; $('q-main').textContent=cur.front; correct=cur.read; optJP=false; }
-    else { prompt.classList.add('q-latin'); $('q-ask').textContent='哪個是「'+cur.read+'」？'; $('q-main').textContent=cur.read; correct=cur.front; optJP=true; }
-  } else if(cur.type==='vocab'){
+    if(mode==='k2r'){ $('q-ask').textContent='這個假名怎麼唸？'; $('q-main').textContent=c.front; correct=c.read; optJP=false; }
+    else { prompt.classList.add('q-latin'); $('q-ask').textContent='哪個是「'+c.read+'」？'; $('q-main').textContent=c.read; correct=c.front; optJP=true; }
+  } else if(c.type==='vocab'){
     mode=Math.random()<0.5?'w2m':'m2w';
-    if(mode==='w2m'){ $('q-ask').textContent='這個單字是什麼意思？'; $('q-main').textContent=cur.front; correct=cur.meaning; optJP=false; }
-    else { prompt.classList.add('q-latin'); $('q-ask').textContent='「'+cur.meaning+'」是哪個？'; $('q-main').textContent=cur.meaning; correct=cur.front; optJP=true; }
-  } else { // grammar
-    mode='gram'; prompt.classList.add('q-sentence'); $('q-ask').textContent='填入正確的字（'+cur.title+'）';
-    $('q-main').textContent=cur.q; correct=cur.a; optJP=true; options=cur.opts.slice();
+    if(mode==='w2m'){ $('q-ask').textContent='這個單字是什麼意思？'; $('q-main').textContent=c.front; correct=c.meaning; optJP=false; }
+    else { prompt.classList.add('q-latin'); $('q-ask').textContent='「'+c.meaning+'」是哪個？'; $('q-main').textContent=c.meaning; correct=c.front; optJP=true; }
+  } else {
+    mode='gram'; prompt.classList.add('q-sentence'); $('q-ask').textContent='填入正確的字（'+c.title+'）';
+    $('q-main').textContent=c.q; correct=c.a; optJP=true; options=c.opts.slice();
   }
-  // 選項
   let list;
   if(options){ list=shuffle(options); }
   else {
     const valOf=it=> mode==='k2r'?it.read : mode==='r2k'?it.front : mode==='w2m'?it.meaning : it.front;
-    let bag=pool().filter(x=>x.type===cur.type); if(bag.length<4) bag=Object.values(ALL).filter(x=>x.type===cur.type);
-    // 避免「同讀音」(じ/ぢ、ず/づ) 或同義字造成反向題有兩個正解
-    if(mode==='r2k') bag=bag.filter(x=> x.read!==cur.read);
-    if(mode==='m2w') bag=bag.filter(x=> x.meaning!==cur.meaning);
+    let bag=pool().filter(x=>x.type===c.type); if(bag.length<4) bag=Object.values(ALL).filter(x=>x.type===c.type);
+    if(mode==='r2k') bag=bag.filter(x=> x.read!==c.read);
+    if(mode==='m2w') bag=bag.filter(x=> x.meaning!==c.meaning);
     const set=new Set([correct]); bag=shuffle(bag);
     for(const x of bag){ if(set.size>=4) break; set.add(valOf(x)); }
     list=shuffle([...set]);
@@ -746,7 +795,6 @@ function newQuestion(){
     b.innerHTML=(optJP?`<span class="oj">${v}</span>`:v)+`<span class="kbd">${idx+1}</span>`;
     b.onclick=()=>answer(b,correct); box.appendChild(b);
   });
-  updateProg();
 }
 function answer(btn,correct){
   if(locked) return; locked=true;
@@ -766,14 +814,40 @@ function answer(btn,correct){
       : cur.type==='vocab'?`「${cur.front}」(${cur.read}) 是「${cur.meaning}」`
       : `正解：${cur.a} ・ ${cur.q.replace('＿','【'+cur.a+'】')}`;
   }
+  if(test){ if(ok) test.correct++; test.idx++; }
   buttons.forEach(b=>b.disabled=true); save(); renderStats(); updateProg();
   setTimeout(newQuestion, ok?850:1700);
 }
-function updateProg(){ $('q-combo').textContent= streak>1?('🔥 x'+streak):''; $('q-prog').style.width=Math.min(100,P.dailyCount/GOAL*100)+'%'; }
-$('weak-clear').onclick=()=>{ quizOverride=null; $('weak-banner').classList.remove('show'); newQuestion(); };
+function updateProg(){
+  if(test){ $('q-combo').textContent=`答對 ${test.correct}`; $('q-prog').style.width=Math.min(100,test.idx/test.items.length*100)+'%'; return; }
+  $('q-combo').textContent= streak>1?('🔥 x'+streak):''; $('q-prog').style.width=Math.min(100,P.dailyCount/GOAL*100)+'%';
+}
+function renderTestResult(){
+  const total=test.items.length, correct=test.correct, pct=Math.round(correct/total*100), pass=correct/total>=0.8;
+  const key=test.key, a=vocabLessons(), next=a[a.indexOf(key)+1];
+  let newly=false;
+  if(pass&&!lessonPassed(key)){ P.passed[key]=true; newly=true; P.xp+=30; save(); renderStats(); }
+  $('weak-banner').classList.remove('show');
+  const prompt=$('q-prompt'); prompt.classList.remove('q-latin','q-sentence'); $('q-stamp').classList.remove('show');
+  $('q-ask').textContent= pass?'測驗通過！':'再接再厲'; $('q-main').textContent= pass?'🎉':'💪';
+  $('q-msg').textContent='';
+  const sub = pass
+    ? (newly ? (next?('通過！已解鎖「'+GROUPS[next].name+'」　+30 XP'):'太厲害了，你完成所有單字課程！　+30 XP') : '再次通過 👍')
+    : '答對 80% 才能過關，複習一下再挑戰！';
+  const box=$('q-opts'); box.innerHTML=`<div class="test-result" style="grid-column:1/-1">
+    <div class="tr-score" style="color:${pass?'var(--good)':'var(--bad)'}">${correct} / ${total}（${pct}%）</div>
+    <div class="tr-sub">${sub}</div><div class="tr-actions" id="tr-actions"></div></div>`;
+  const act=$('tr-actions');
+  const mk=(cls,txt,fn)=>{ const b=document.createElement('button'); b.className='btn '+cls; b.textContent=txt; b.onclick=fn; act.appendChild(b); };
+  if(pass&&next){ mk('solid','前往下一課 ▶',()=>{ test=null; activeGroup=next; renderPicker(); onGroupChange(); switchTo('learn'); }); mk('line','重測這課',()=>startTest(key)); }
+  else if(pass){ mk('solid','回總覽',()=>{ test=null; switchTo('home'); }); mk('line','重測這課',()=>startTest(key)); }
+  else { mk('solid','重測這課',()=>startTest(key)); mk('line','回去複習',()=>{ test=null; switchTo('learn'); }); }
+  if(pass&&newly) toast(next?('🔓 解鎖「'+GROUPS[next].name+'」！'):'🎉 完成所有單字課程！');
+}
+$('weak-clear').onclick=()=>{ if(test){ test=null; $('weak-banner').classList.remove('show'); switchTo('learn'); return; } quizOverride=null; $('weak-banner').classList.remove('show'); newQuestion(); };
 document.addEventListener('keydown',e=>{
   if(view!=='quiz'||locked) return; const n=parseInt(e.key,10);
-  if(n>=1&&n<=9){ const b=$('q-opts').children[n-1]; if(b) b.click(); }
+  if(n>=1&&n<=9){ const b=$('q-opts').children[n-1]; if(b&&b.classList.contains('opt')) b.click(); }
 });
 
 /* ===================== 弱點 ===================== */
@@ -815,11 +889,12 @@ function renderSettings(){
 }
 document.querySelectorAll('#seg-theme button').forEach(b=> b.onclick=()=>{ P.theme=b.dataset.theme; save(); applyTheme(); renderSettings(); });
 document.querySelectorAll('#seg-sound button').forEach(b=> b.onclick=()=>{ P.sound=b.dataset.sound==='on'; save(); renderSettings(); if(P.sound) say('こんにちは'); });
-$('btn-reset').onclick=()=>{ if(confirm('確定重置全部進度？XP、連勝、答錯紀錄都會清空，無法復原。')){ const th=P.theme, sd=P.sound; localStorage.removeItem(KEY); P=load(); P.theme=th; P.sound=sd; save(); streak=0; quizOverride=null; renderStats(); renderSettings(); renderLearn(); toast('已重置，重新開始！'); } };
+$('btn-reset').onclick=()=>{ if(confirm('確定重置全部進度？XP、連勝、答錯紀錄與課程解鎖都會清空，無法復原。')){ const th=P.theme, sd=P.sound; localStorage.removeItem(KEY); P=load(); P.theme=th; P.sound=sd; save(); streak=0; quizOverride=null; test=null; activeCat='kana'; activeGroup='hs'; renderStats(); renderSettings(); renderPicker(); renderLearn(); toast('已重置，重新開始！'); } };
 
 /* ===================== 分頁 ===================== */
 function switchTo(v){
   view=v;
+  if(v!=='quiz'){ if(test){ test=null; } $('weak-banner').classList.remove('show'); }
   document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected', x.dataset.view===v));
   $('view-home').hidden=v!=='home'; $('view-learn').hidden=v!=='learn'; $('view-flash').hidden=v!=='flash';
   $('view-quiz').hidden=v!=='quiz'; $('view-weak').hidden=v!=='weak'; $('view-settings').hidden=v!=='settings';
