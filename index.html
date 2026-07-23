@@ -1,5 +1,14 @@
+<meta charset="utf-8">
 <title>かなクエスト・假名冒險 — JLPT N5 五十音・單字・文法</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#26456b">
+<meta name="description" content="JLPT N5 五十音・單字・文法互動學習 App">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="假名冒險">
 <style>
   :root {
     --indigo:#26456b; --indigo-2:#35608f; --vermil:#d64524; --gold:#d99a2b;
@@ -412,7 +421,13 @@
         </div>
       </div>
       <div class="set-row">
-        <h3>重置進度</h3><p>清除所有 XP、連勝與答錯紀錄，無法復原。</p>
+        <h3>安裝成 App 📱</h3>
+        <p>加到手機主畫面後，就有 App 圖示、全螢幕、還能離線使用。</p>
+        <button class="btn solid" id="btn-install" hidden>一鍵安裝</button>
+        <div id="install-tip" style="font-size:12.5px;color:var(--ink-soft);line-height:1.75"></div>
+      </div>
+      <div class="set-row">
+        <h3>重置進度</h3><p>清除所有 XP、連勝、答錯紀錄與課程解鎖，無法復原。</p>
         <button class="btn solid" id="btn-reset">重置全部進度</button>
       </div>
     </div>
@@ -886,7 +901,16 @@ function renderSettings(){
   document.querySelectorAll('#seg-sound button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.sound===(P.sound?'on':'off')));
   $('set-xp').textContent=P.xp; $('set-best').textContent=P.best;
   let tot=0; for(const id in P.stats) tot+=P.stats[id].s; $('set-answered').textContent=tot;
+  const ua=navigator.userAgent, isIOS=/iphone|ipad|ipod/i.test(ua)||(/Macintosh/.test(ua)&&'ontouchend' in document);
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  $('install-tip').innerHTML = standalone ? '✅ 你已經以 App 模式開啟，讚！'
+    : isIOS ? 'iPhone / iPad：請用 <b>Safari</b> 開啟本頁 → 點下方工具列的「<b>分享</b>」按鈕 → 選「<b>加入主畫面</b>」。'
+    : 'Android / 電腦版 Chrome：點瀏覽器選單（⋮）→「<b>安裝應用程式</b>」或「加到主畫面」。也可用上方按鈕（若有出現）。';
 }
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredPrompt=e; const b=$('btn-install'); if(b) b.hidden=false; });
+$('btn-install').onclick=async ()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; $('btn-install').hidden=true; };
+window.addEventListener('appinstalled', ()=>{ toast('🎉 已安裝到主畫面！'); });
 document.querySelectorAll('#seg-theme button').forEach(b=> b.onclick=()=>{ P.theme=b.dataset.theme; save(); applyTheme(); renderSettings(); });
 document.querySelectorAll('#seg-sound button').forEach(b=> b.onclick=()=>{ P.sound=b.dataset.sound==='on'; save(); renderSettings(); if(P.sound) say('こんにちは'); });
 $('btn-reset').onclick=()=>{ if(confirm('確定重置全部進度？XP、連勝、答錯紀錄與課程解鎖都會清空，無法復原。')){ const th=P.theme, sd=P.sound; localStorage.removeItem(KEY); P=load(); P.theme=th; P.sound=sd; save(); streak=0; quizOverride=null; test=null; activeCat='kana'; activeGroup='hs'; renderStats(); renderSettings(); renderPicker(); renderLearn(); toast('已重置，重新開始！'); } };
@@ -911,4 +935,12 @@ document.querySelectorAll('[data-go]').forEach(b=> b.onclick=()=>switchTo(b.data
 
 /* ===================== 啟動 ===================== */
 applyTheme(); renderPicker(); renderStats(); renderLearn(); resetFlash(); newQuestion(); renderHome(); switchTo('home');
+</script>
+<script>
+/* PWA：註冊 Service Worker（需 https 或 localhost 才會成功；在沙箱環境會安靜略過） */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
 </script>

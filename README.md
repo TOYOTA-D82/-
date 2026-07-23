@@ -17,6 +17,20 @@
 
 ---
 
+## 📱 安裝成 App（PWA）
+
+本專案是 **PWA（漸進式網頁 App）**，可加到手機主畫面，擁有 App 圖示、全螢幕、離線使用。
+
+- 相關檔案：`manifest.json`、`sw.js`（Service Worker 離線快取）、`icon-192.png`／`icon-512.png`／`icon-180.png`
+- **安裝方式**
+  - iPhone / iPad：用 **Safari** 開啟網站 → 「分享」→「加入主畫面」（**不需要描述檔／.mobileconfig**）
+  - Android / Chrome：選單（⋮）→「安裝應用程式」
+- **前提**：需以 HTTPS 網址開啟（例如 GitHub Pages）。直接開本機檔案或在沙箱環境中，Service Worker 不會註冊，但功能仍可正常使用。
+
+> 進度（XP、連勝、課程解鎖）存在該裝置瀏覽器的 localStorage，換裝置不會同步。
+
+---
+
 ## 🎮 互動學習網站
 
 打開 `index.html` 就是一個五十音學習小遊戲「**かなクエスト・假名冒險**」，專治三分鐘熱度：
