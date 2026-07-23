@@ -51,13 +51,18 @@
   .tab[aria-selected="true"] { background:var(--indigo); color:#fff; border-color:var(--indigo); box-shadow:0 4px 14px var(--shadow); }
   .tab:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
 
-  .groups { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
-  .gcluster { display:flex; flex-wrap:wrap; gap:7px; align-items:center; }
-  .glabel { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); font-weight:800; margin-right:2px; }
-  .chip { padding:7px 13px; border-radius:999px; border:1.5px solid var(--card-edge); background:transparent;
-    color:var(--ink-soft); font:inherit; font-weight:600; font-size:12.5px; cursor:pointer; transition:.15s; }
-  .chip[aria-pressed="true"] { background:color-mix(in srgb,var(--indigo) 14%, transparent); border-color:var(--indigo); color:var(--indigo); }
-  .chip:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
+  .picker { display:flex; flex-direction:column; gap:12px; margin-bottom:18px; }
+  .cat-seg { display:flex; gap:8px; }
+  .cat-seg button { flex:1; padding:12px 8px; border:1.5px solid var(--card-edge); background:var(--card); border-radius:12px;
+    font:inherit; font-weight:800; font-size:14.5px; color:var(--ink-soft); cursor:pointer; transition:.15s; white-space:nowrap; }
+  .cat-seg button[aria-pressed="true"] { background:var(--indigo); color:#fff; border-color:var(--indigo); box-shadow:0 4px 14px var(--shadow); }
+  .cat-seg button:focus-visible, .topics button:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
+  .topics-wrap { display:flex; align-items:center; gap:8px; }
+  .topics-wrap .t-label { font-size:11px; letter-spacing:.08em; color:var(--ink-soft); font-weight:800; flex:none; }
+  .topics { display:flex; gap:8px; overflow-x:auto; padding-bottom:3px; scrollbar-width:thin; }
+  .topics button { flex:0 0 auto; padding:8px 15px; border-radius:10px; border:1.5px solid var(--card-edge); background:transparent;
+    color:var(--ink-soft); font:inherit; font-weight:600; font-size:13px; cursor:pointer; transition:.15s; white-space:nowrap; }
+  .topics button[aria-pressed="true"] { background:color-mix(in srgb,var(--indigo) 15%, transparent); border-color:var(--indigo); color:var(--indigo); font-weight:800; }
 
   .learn-hint { color:var(--ink-soft); font-size:13px; margin:0 0 12px; }
 
@@ -239,6 +244,7 @@
     .opt .oj { font-size:23px; }
     .rank-banner { padding:11px 13px; font-size:12.5px; }
     .set-stat { gap:12px; }
+    .cat-seg button { font-size:13px; padding:11px 6px; }
   }
   @media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } }
 </style>
@@ -275,7 +281,10 @@
     <button class="tab" role="tab" aria-selected="false" data-view="settings">設定<span class="jp">せってい</span></button>
   </div>
 
-  <div class="groups" id="groups" aria-label="選擇練習範圍" hidden></div>
+  <div class="picker" id="picker" aria-label="選擇學習範圍" hidden>
+    <div class="cat-seg" id="cat-seg"></div>
+    <div class="topics-wrap"><span class="t-label">主題</span><div class="topics" id="topics"></div></div>
+  </div>
 
   <!-- 總覽 -->
   <section id="view-home">
@@ -579,7 +588,7 @@ function say(text){ if(!P.sound || !('speechSynthesis' in window)) return;
 function speakItem(it){ if(it.type==='vocab') say(it.read); else if(it.type==='grammar') say(it.q.replace('＿', it.a)); else say(it.front); }
 
 /* ===================== 狀態 ===================== */
-let selected=new Set(['hs']);
+let activeCat='kana', activeGroup='hs';
 let streak=0, quizOverride=null, view='home';
 const $=id=>document.getElementById(id);
 const GOAL=20;
@@ -592,25 +601,30 @@ function renderStats(){
   $('rank-emoji').textContent=r[2]; $('rank-name').textContent=r[1];
   $('rank-next').textContent= nx?('再 '+(nx[0]-P.xp)+' XP 升「'+nx[1]+'」'):'已達最高段位！🎉';
 }
-function pool(){ let a=[]; for(const g of selected) a=a.concat(itemsOf(g)); return a; }
-function firstType(){ return GROUPS[[...selected][0]].type; }
+function pool(){ return itemsOf(activeGroup); }
+function firstType(){ return GROUPS[activeGroup].type; }
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),1500); }
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
 
-/* ===================== 群組晶片 ===================== */
-function renderGroups(){
-  const box=$('groups'); box.innerHTML='';
-  const clusters={ kana:{label:'五十音', el:null}, vocab:{label:'單字', el:null}, grammar:{label:'文法', el:null} };
-  for(const t in clusters){ const c=document.createElement('div'); c.className='gcluster';
-    c.innerHTML='<span class="glabel">'+clusters[t].label+'</span>'; clusters[t].el=c; }
-  for(const key in GROUPS){
-    const b=document.createElement('button'); b.className='chip'; b.textContent=GROUPS[key].name;
-    b.setAttribute('aria-pressed', selected.has(key));
-    b.onclick=()=>{ if(selected.has(key)){ if(selected.size>1) selected.delete(key); } else selected.add(key);
-      renderGroups(); onGroupChange(); };
-    clusters[GROUPS[key].type].el.appendChild(b);
+/* ===================== 分類 / 主題選擇 ===================== */
+const CAT_LABEL={ kana:'🎴 五十音', vocab:'📚 單字', grammar:'✍️ 文法' };
+function catGroups(cat){ return Object.keys(GROUPS).filter(k=>GROUPS[k].type===cat); }
+function renderPicker(){
+  const seg=$('cat-seg'); seg.innerHTML='';
+  for(const cat of ['kana','vocab','grammar']){
+    const b=document.createElement('button'); b.dataset.cat=cat; b.textContent=CAT_LABEL[cat];
+    b.setAttribute('aria-pressed', cat===activeCat);
+    b.onclick=()=>{ if(cat!==activeCat){ activeCat=cat; activeGroup=catGroups(cat)[0]; renderPicker(); onGroupChange(); } };
+    seg.appendChild(b);
   }
-  for(const t in clusters) box.appendChild(clusters[t].el);
+  const tp=$('topics'); tp.innerHTML='';
+  for(const key of catGroups(activeCat)){
+    const b=document.createElement('button'); b.textContent=GROUPS[key].name;
+    b.setAttribute('aria-pressed', key===activeGroup);
+    b.onclick=()=>{ if(key!==activeGroup){ activeGroup=key; renderPicker(); onGroupChange();
+      const cur=tp.querySelector('[aria-pressed="true"]'); if(cur) cur.scrollIntoView({inline:'center',block:'nearest'}); } };
+    tp.appendChild(b);
+  }
 }
 function onGroupChange(){ renderLearn(); resetFlash(); newQuestion(); }
 
@@ -624,7 +638,7 @@ function renderLearn(){
   else { $('learn-hint').textContent='👇 點開每條文法看講解與例句，再到「測驗」練填空。'; renderGlist(); }
 }
 function renderChart(){
-  const key=[...selected].find(k=>GROUPS[k].type==='kana'); const g=GROUPS[key]; curCols=g.cols;
+  const g=GROUPS[activeGroup]; curCols=g.cols;
   const chart=$('chart'); chart.style.gridTemplateColumns=`repeat(${g.cols},1fr)`; chart.innerHTML='';
   const items=g.layout==='gojuon'?gojuonLayout(g.data):g.data.map(x=>({k:x[0],r:x[1],h:x[2]}));
   items.forEach((it,i)=>{
@@ -663,8 +677,7 @@ function renderVlist(){
 }
 function renderGlist(){
   const box=$('glist'); box.innerHTML='';
-  const keys=[...selected].filter(k=>GROUPS[k].type==='grammar');
-  for(const key of keys) for(const p of GROUPS[key].points){
+  for(const p of GROUPS[activeGroup].points){
     const wrong = p.qs.some((qq,i)=> stat(p.id+'#'+i).w>0);
     const det=document.createElement('details'); det.className='gcard';
     let ex=''; for(const e of p.ex) ex+=`<div class="gex"><div class="s">${e.s}</div><div class="r">${e.r}</div><div class="m">${e.m}</div></div>`;
@@ -810,7 +823,7 @@ function switchTo(v){
   document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected', x.dataset.view===v));
   $('view-home').hidden=v!=='home'; $('view-learn').hidden=v!=='learn'; $('view-flash').hidden=v!=='flash';
   $('view-quiz').hidden=v!=='quiz'; $('view-weak').hidden=v!=='weak'; $('view-settings').hidden=v!=='settings';
-  $('groups').hidden = !(v==='learn'||v==='flash'||v==='quiz');
+  $('picker').hidden = !(v==='learn'||v==='flash'||v==='quiz');
   if(v==='home') renderHome();
   if(v==='learn') renderLearn();
   if(v==='flash') resetFlash();
@@ -822,5 +835,5 @@ document.querySelectorAll('.tab').forEach(t=> t.onclick=()=>switchTo(t.dataset.v
 document.querySelectorAll('[data-go]').forEach(b=> b.onclick=()=>switchTo(b.dataset.go));
 
 /* ===================== 啟動 ===================== */
-applyTheme(); renderGroups(); renderStats(); renderLearn(); resetFlash(); newQuestion(); renderHome(); switchTo('home');
+applyTheme(); renderPicker(); renderStats(); renderLearn(); resetFlash(); newQuestion(); renderHome(); switchTo('home');
 </script>
