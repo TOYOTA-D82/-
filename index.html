@@ -689,7 +689,7 @@ function renderPicker(){
     tp.appendChild(b);
   }
 }
-function onGroupChange(){ renderLearn(); resetFlash(); newQuestion(); }
+function onGroupChange(){ test=null; quizOverride=null; $('weak-banner').classList.remove('show'); renderLearn(); resetFlash(); newQuestion(); }
 
 /* ===================== 學習 ===================== */
 let curCols=5;
@@ -782,13 +782,15 @@ function nextCard(){ di++; if(di%deck.length===0) deck=shuffle(deck); showCard()
 /* ===================== 測驗 ===================== */
 let cur=null, mode='k2r', locked=false, test=null;
 function quizPool(){ return quizOverride&&quizOverride.length? quizOverride : pool(); }
-function startTest(key){
+function beginTest(key){
   activeCat='vocab'; activeGroup=key; quizOverride=null;
   test={ key, items:shuffle(itemsOf(key)), idx:0, correct:0 }; streak=0;
-  switchTo('quiz');
 }
+function startTest(key){ beginTest(key); switchTo('quiz'); }
 function newQuestion(){
   const banner=$('weak-banner');
+  // 單字：進入「測驗」一律走該課闖關測驗（答題累積、通過解鎖）；弱點練習與五十音/文法維持自由練習
+  if(!test && !(quizOverride&&quizOverride.length) && GROUPS[activeGroup] && GROUPS[activeGroup].type==='vocab') beginTest(activeGroup);
   if(test){
     if(test.idx>=test.items.length){ return renderTestResult(); }
     banner.classList.add('show');
