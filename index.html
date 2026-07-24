@@ -62,8 +62,8 @@
 
   .picker { display:flex; flex-direction:column; gap:12px; margin-bottom:18px; }
   .cat-seg { display:flex; gap:8px; }
-  .cat-seg button { flex:1; padding:12px 8px; border:1.5px solid var(--card-edge); background:var(--card); border-radius:12px;
-    font:inherit; font-weight:800; font-size:14.5px; color:var(--ink-soft); cursor:pointer; transition:.15s; white-space:nowrap; }
+  .cat-seg button { flex:1; min-width:0; padding:12px 6px; border:1.5px solid var(--card-edge); background:var(--card); border-radius:12px;
+    font:inherit; font-weight:800; font-size:13.5px; color:var(--ink-soft); cursor:pointer; transition:.15s; white-space:nowrap; }
   .cat-seg button[aria-pressed="true"] { background:var(--indigo); color:#fff; border-color:var(--indigo); box-shadow:0 4px 14px var(--shadow); }
   .cat-seg button:focus-visible, .topics button:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
   .topics-wrap { display:flex; align-items:center; gap:8px; }
@@ -188,6 +188,7 @@
   .prompt .q { font-family:var(--font-kana); font-size:clamp(48px,15vw,84px); font-weight:600; line-height:1.08; margin-top:6px; }
   .prompt.q-latin .q { font-family:var(--font-ui); font-weight:800; letter-spacing:.03em; font-size:clamp(30px,9vw,52px); }
   .prompt.q-sentence .q { font-family:var(--font-kana); font-weight:600; font-size:clamp(19px,5vw,28px); line-height:1.7; }
+  .prompt.q-reading .q { font-size:14.5px; line-height:1.85; text-align:left; white-space:pre-line; font-weight:500; }
   .stamp { position:absolute; top:50%; left:50%; width:118px; height:118px; border-radius:50%; border:5px solid var(--vermil);
     color:var(--vermil); display:grid; place-items:center; font-family:var(--font-kana); font-size:60px; font-weight:700;
     transform:translate(-50%,-50%) scale(0) rotate(-18deg); opacity:0; pointer-events:none; }
@@ -321,6 +322,7 @@
       <div class="ov-bar"><div class="r1"><span>🎴 五十音</span><span id="ov-kana-n">0/0</span></div><div class="track"><div class="fill" id="ov-kana-f" style="background:var(--indigo)"></div></div></div>
       <div class="ov-bar"><div class="r1"><span>📚 單字</span><span id="ov-vocab-n">0/0</span></div><div class="track"><div class="fill" id="ov-vocab-f" style="background:var(--gold)"></div></div></div>
       <div class="ov-bar"><div class="r1"><span>✍️ 文法</span><span id="ov-gram-n">0/0</span></div><div class="track"><div class="fill" id="ov-gram-f" style="background:var(--good)"></div></div></div>
+      <div class="ov-bar"><div class="r1"><span>📝 考題</span><span id="ov-exam-n">0/0</span></div><div class="track"><div class="fill" id="ov-exam-f" style="background:var(--vermil)"></div></div></div>
     </div>
     <div class="ov-actions">
       <button class="btn solid" data-go="learn">📖 開始學習</button>
@@ -343,6 +345,7 @@
     <div class="grid" id="chart"></div>
     <div class="vlist" id="vlist" hidden></div>
     <div class="glist" id="glist" hidden></div>
+    <div class="glist" id="exlist" hidden></div>
   </section>
 
   <!-- 閃卡 -->
@@ -573,6 +576,46 @@ const GP_CONJ=[
   qs:[{q:'＿は 私の かばんです。（這個）', opts:['これ','この','ここ','こう'], a:'これ'}]},
 ];
 
+// 模擬考題（原創，仿真實 JLPT N5 題型；非官方考古題）
+const EX_YOMI=[
+ {q:'「山」に のぼります。', a:'やま', opts:['やま','かわ','うみ','はやし'], exp:'山＝やま'},
+ {q:'つめたい 「水」を のみます。', a:'みず', opts:['みず','みつ','すい','みぞ'], exp:'水＝みず'},
+ {q:'まいにち 「学校」へ 行きます。', a:'がっこう', opts:['がっこう','がくこう','かっこう','がっこ'], exp:'学校＝がっこう'},
+ {q:'「先生」は しんせつです。', a:'せんせい', opts:['せんせい','せいせい','せんせえ','ぜんせい'], exp:'先生＝せんせい'},
+ {q:'「今日」は いい てんきです。', a:'きょう', opts:['きょう','こんにち','きょお','こんち'], exp:'今日＝きょう（特殊唸法）'},
+ {q:'「魚」を たべます。', a:'さかな', opts:['さかな','うお','さがな','さかの'], exp:'魚＝さかな'},
+ {q:'あたらしい 「車」を かいました。', a:'くるま', opts:['くるま','しゃ','くらま','くろま'], exp:'車＝くるま'},
+ {q:'「雨」が ふって います。', a:'あめ', opts:['あめ','あま','あね','ゆき'], exp:'雨＝あめ'},
+ {q:'この かばんは 「大きい」です。', a:'おおきい', opts:['おおきい','おうきい','だいきい','おおい'], exp:'大きい＝おおきい'},
+ {q:'「毎日」 うんどうします。', a:'まいにち', opts:['まいにち','まいび','めいにち','まいひ'], exp:'毎日＝まいにち'},
+];
+const EX_WORD=[
+ {q:'のどが かわいたので、水を （　）。', a:'のみます', opts:['のみます','たべます','かいます','みます'], exp:'喝水→飲みます'},
+ {q:'きのう としょかんで 本を （　）。', a:'よみました', opts:['よみました','のみました','ききました','いきました'], exp:'讀書→読みました'},
+ {q:'あさ 7時に （　）。', a:'おきます', opts:['おきます','ねます','かえります','はじまります'], exp:'早上起床→起きます'},
+ {q:'デパートで くつを （　）。', a:'かいます', opts:['かいます','うります','ふります','なきます'], exp:'買鞋→買います'},
+ {q:'きょうは とても （　）ので、まどを あけます。', a:'あつい', opts:['あつい','さむい','たかい','ながい'], exp:'很熱→暑い'},
+ {q:'わからない ことを 先生に （　）。', a:'ききます', opts:['ききます','はなします','みます','あそびます'], exp:'問老師→聞きます'},
+ {q:'この えいがは とても （　）です。', a:'おもしろい', opts:['おもしろい','まずい','からい','あまい'], exp:'電影很有趣→面白い'},
+ {q:'まいばん 11時に （　）。', a:'ねます', opts:['ねます','おきます','いきます','あけます'], exp:'睡覺→寝ます'},
+];
+const EX_GRAM=[
+ {q:'まいにち でんしゃ（　）会社へ 行きます。', a:'で', opts:['で','に','を','へ'], exp:'交通手段用「で」'},
+ {q:'つくえの うえ（　）ほんが あります。', a:'に', opts:['に','で','を','へ'], exp:'存在地點用「に」'},
+ {q:'へやに だれ（　）いません。', a:'も', opts:['も','が','を','は'], exp:'だれも～ません＝沒有任何人'},
+ {q:'コーヒー（　）こうちゃ、どちらが いいですか。', a:'と', opts:['と','や','も','に'], exp:'並列二選一用「と」'},
+ {q:'この みせの ラーメンは やす（　）おいしいです。', a:'くて', opts:['くて','いで','だの','に'], exp:'い形容詞て形：安くて'},
+ {q:'A「しゅくだいを しましたか。」 B「いいえ、（　）。」', a:'まだです', opts:['まだです','もうです','そうです','はいです'], exp:'還沒→まだです'},
+ {q:'わたしは にほんご（　）すきです。', a:'が', opts:['が','を','に','へ'], exp:'好惡的對象用「が」'},
+ {q:'あした ひまですから、いっしょに えいがを 見（　）。', a:'ませんか', opts:['ませんか','ました','ています','たかった'], exp:'邀約：～ませんか'},
+];
+const RP='わたしは まいあさ 6時に おきます。あさごはんを たべてから、7時に いえを でます。えきまで あるいて、でんしゃで 学校へ 行きます。学校は 8時半からです。';
+const EX_READ=[
+ {q:RP+'\n\n問：この 人は なんじに おきますか。', a:'6時', opts:['6時','7時','8時半','9時'], exp:'「6時に おきます」'},
+ {q:RP+'\n\n問：なにで 学校へ 行きますか。', a:'でんしゃ', opts:['でんしゃ','バス','くるま','じてんしゃ'], exp:'「でんしゃで 学校へ」'},
+ {q:RP+'\n\n問：えきまで どうやって 行きますか。', a:'あるいて', opts:['あるいて','でんしゃ','タクシー','バス'], exp:'「えきまで あるいて」＝走路'},
+];
+
 const GROUPS = {
   hs:{ name:'平假名 清音', type:'kana', data:HS, cols:5, layout:'gojuon' },
   ks:{ name:'片假名 清音', type:'kana', data:KS, cols:5, layout:'gojuon' },
@@ -590,12 +633,17 @@ const GROUPS = {
   les10:{ name:'第10課 天氣・自然', type:'vocab', data:LES10 },
   gpart:{ name:'助詞', type:'grammar', points:GP_PART },
   gconj:{ name:'動詞・形容詞・句型', type:'grammar', points:GP_CONJ },
+  exyomi:{ name:'漢字読み', type:'exam', ask:'畫「」的漢字怎麼唸？', data:EX_YOMI },
+  exword:{ name:'語彙（選詞）', type:'exam', ask:'（　）該放哪個？', data:EX_WORD },
+  exgram:{ name:'文法（句子）', type:'exam', ask:'（　）該放哪個？', data:EX_GRAM },
+  exread:{ name:'讀解（短文）', type:'exam', ask:'讀短文，選出正確答案', data:EX_READ, reading:true },
 };
 
 function itemsOf(key){
   const g=GROUPS[key];
   if(g.type==='kana') return g.data.map(x=>({id:'k:'+x[0], type:'kana', front:x[0], read:x[1], hint:x[2]||''}));
   if(g.type==='vocab') return g.data.map(x=>({id:'v:'+x[0], type:'vocab', front:x[0], read:x[1], meaning:x[2]}));
+  if(g.type==='exam') return g.data.map((x,i)=>({id:'e:'+key+':'+i, type:'exam', ask:g.ask, q:x.q, opts:x.opts, a:x.a, exp:x.exp||'', reading:!!g.reading}));
   // grammar：把每個練習題攤平成 item
   const out=[];
   g.points.forEach(p=> p.qs.forEach((qq,i)=> out.push({
@@ -638,7 +686,7 @@ function pickVoice(){ const vs=speechSynthesis.getVoices(); jaVoice=vs.find(v=>/
 if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
 function say(text){ if(!P.sound || !('speechSynthesis' in window)) return;
   try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='ja-JP'; if(jaVoice) u.voice=jaVoice; u.rate=.82; speechSynthesis.speak(u);}catch(e){} }
-function speakItem(it){ if(it.type==='vocab') say(it.read); else if(it.type==='grammar') say(it.q.replace('＿', it.a)); else say(it.front); }
+function speakItem(it){ if(it.type==='vocab') say(it.read); else if(it.type==='grammar') say(it.q.replace('＿', it.a)); else if(it.type==='exam') say(it.a); else say(it.front); }
 
 /* ===================== 狀態 ===================== */
 let activeCat='kana', activeGroup='hs';
@@ -660,7 +708,7 @@ function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show');
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
 
 /* ===================== 分類 / 主題選擇 ===================== */
-const CAT_LABEL={ kana:'🎴 五十音', vocab:'📚 單字', grammar:'✍️ 文法' };
+const CAT_LABEL={ kana:'🎴 五十音', vocab:'📚 單字', grammar:'✍️ 文法', exam:'📝 考題' };
 function catGroups(cat){ return Object.keys(GROUPS).filter(k=>GROUPS[k].type===cat); }
 // 單字採闖關：通過該課測驗才解鎖下一課
 function vocabLessons(){ return catGroups('vocab'); }
@@ -669,7 +717,7 @@ function lessonUnlocked(key){ const a=vocabLessons(), i=a.indexOf(key); return i
 function currentVocabLesson(){ const a=vocabLessons(); for(const k of a){ if(!lessonPassed(k)) return k; } return a[a.length-1]; }
 function renderPicker(){
   const seg=$('cat-seg'); seg.innerHTML='';
-  for(const cat of ['kana','vocab','grammar']){
+  for(const cat of ['kana','vocab','grammar','exam']){
     const b=document.createElement('button'); b.dataset.cat=cat; b.textContent=CAT_LABEL[cat];
     b.setAttribute('aria-pressed', cat===activeCat);
     b.onclick=()=>{ if(cat!==activeCat){ activeCat=cat; activeGroup= cat==='vocab'?currentVocabLesson():catGroups(cat)[0]; renderPicker(); onGroupChange(); } };
@@ -695,11 +743,24 @@ function onGroupChange(){ test=null; quizOverride=null; $('weak-banner').classLi
 let curCols=5;
 function renderLearn(){
   const t=firstType();
-  $('chart').hidden=t!=='kana'; $('vlist').hidden=t!=='vocab'; $('glist').hidden=t!=='grammar';
+  $('chart').hidden=t!=='kana'; $('vlist').hidden=t!=='vocab'; $('glist').hidden=t!=='grammar'; $('exlist').hidden=t!=='exam';
   if(t==='kana'){ $('learn-hint').textContent='👆 點任一個假名，會在下方展開發音與記憶口訣（再點一次收合）。'; renderChart(); }
   else if(t==='vocab'){ $('learn-hint').textContent='👆 點單字可聽發音。上方「練習」隨你練（不影響進度）；讀熟後按下方「開始測驗」，通過就解鎖下一課。'; renderVlist(); }
-  else { $('learn-hint').textContent='👇 點開每條文法看講解與例句，再到「測驗」練填空。'; renderGlist(); }
+  else if(t==='grammar'){ $('learn-hint').textContent='👇 點開每條文法看講解與例句，再到「練習」作答。'; renderGlist(); }
+  else { $('learn-hint').textContent='👇 仿真實 N5 題型的原創考題。可先看答案與解說，再到「練習」實戰。'; renderExamList(); }
   renderLessonBar();
+}
+function renderExamList(){
+  const box=$('exlist'); box.innerHTML='';
+  for(const it of itemsOf(activeGroup)){
+    const wrong=stat(it.id).w>0;
+    const title = it.reading ? '📖 讀解短文題' : (it.q.length>20 ? it.q.slice(0,20)+'…' : it.q);
+    const det=document.createElement('details'); det.className='gcard';
+    det.innerHTML=`<summary>${wrong?'<span class="gmark" title="這題你答錯過"></span>':''}${title}<span class="pat">看答案</span></summary>`
+      +`<div class="gbody"><p class="cn" style="white-space:pre-line">${it.q}</p>`
+      +`<p class="cn"><b style="color:var(--good)">✓ ${it.a}</b>${it.exp?' ・ '+it.exp:''}</p></div>`;
+    box.appendChild(det);
+  }
 }
 function renderLessonBar(){
   const bar=$('lesson-bar');
@@ -761,11 +822,11 @@ function renderGlist(){
 
 /* ===================== 閃卡（只用五十音／單字） ===================== */
 let deck=[], di=0;
-function resetFlash(){ deck=shuffle(pool().filter(x=>x.type!=='grammar')); di=0; showCard(); }
+function resetFlash(){ deck=shuffle(pool().filter(x=> x.type==='kana'||x.type==='vocab')); di=0; showCard(); }
 function curCard(){ return deck[di%deck.length]; }
 function showCard(){
-  if(!deck.length){ $('f-front').textContent='📘'; $('f-front').style.fontSize='40px'; $('f-back').innerHTML='<div class="lbl">文法請用「學習」與「測驗」</div>';
-    $('f-count').textContent='此範圍沒有閃卡（文法不用閃卡）'; return; }
+  if(!deck.length){ $('f-front').textContent='📘'; $('f-front').style.fontSize='40px'; $('f-back').innerHTML='<div class="lbl">文法／考題請用「學習」與「練習」</div>';
+    $('f-count').textContent='此範圍沒有閃卡（只有五十音與單字有）'; return; }
   const c=curCard(); $('fcard').classList.remove('flip'); $('f-front').textContent=c.front;
   $('f-front').style.fontSize= c.front.length>=3?'48px':(c.type==='vocab'?'72px':'104px');
   $('f-back').innerHTML= c.type==='vocab'
@@ -803,7 +864,7 @@ function newQuestion(){
   locked=false; cur=p[Math.random()*p.length|0]; renderQuestionFor(cur); updateProg();
 }
 function renderQuestionFor(c){
-  const prompt=$('q-prompt'); prompt.classList.remove('q-latin','q-sentence'); $('q-stamp').classList.remove('show');
+  const prompt=$('q-prompt'); prompt.classList.remove('q-latin','q-sentence','q-reading'); $('q-stamp').classList.remove('show');
   $('q-msg').textContent=''; $('q-msg').style.color='';
   let correct, optJP, options=null;
   if(c.type==='kana'){
@@ -811,19 +872,24 @@ function renderQuestionFor(c){
     if(mode==='k2r'){ $('q-ask').textContent='這個假名怎麼唸？'; $('q-main').textContent=c.front; correct=c.read; optJP=false; }
     else { prompt.classList.add('q-latin'); $('q-ask').textContent='哪個是「'+c.read+'」？'; $('q-main').textContent=c.read; correct=c.front; optJP=true; }
   } else if(c.type==='vocab'){
-    mode=Math.random()<0.5?'w2m':'m2w';
+    const ms=['w2m','m2w']; if(hasKanji(c.front)) ms.push('w2r');   // 有漢字才考「漢字読み」
+    mode=ms[Math.random()*ms.length|0];
     if(mode==='w2m'){ $('q-ask').textContent='這個單字是什麼意思？'; $('q-main').textContent=c.front; correct=c.meaning; optJP=false; }
-    else { prompt.classList.add('q-latin'); $('q-ask').textContent='「'+c.meaning+'」是哪個？'; $('q-main').textContent=c.meaning; correct=c.front; optJP=true; }
-  } else {
+    else if(mode==='m2w'){ prompt.classList.add('q-latin'); $('q-ask').textContent='「'+c.meaning+'」是哪個？'; $('q-main').textContent=c.meaning; correct=c.front; optJP=true; }
+    else { $('q-ask').textContent='「'+c.front+'」怎麼唸？'; $('q-main').textContent=c.front; correct=c.read; optJP=true; }
+  } else if(c.type==='grammar'){
     mode='gram'; prompt.classList.add('q-sentence'); $('q-ask').textContent='填入正確的字（'+c.title+'）';
     $('q-main').textContent=c.q; correct=c.a; optJP=true; options=c.opts.slice();
+  } else { // exam：考題自帶四選項
+    mode='exam'; prompt.classList.add('q-sentence'); if(c.reading) prompt.classList.add('q-reading');
+    $('q-ask').textContent=c.ask; $('q-main').textContent=c.q; correct=c.a; optJP=true; options=c.opts.slice();
   }
   let list;
   if(options){ list=shuffle(options); }
   else {
-    const valOf=it=> mode==='k2r'?it.read : mode==='r2k'?it.front : mode==='w2m'?it.meaning : it.front;
+    const valOf=it=> (mode==='k2r'||mode==='w2r')?it.read : mode==='w2m'?it.meaning : it.front;
     let bag=pool().filter(x=>x.type===c.type); if(bag.length<4) bag=Object.values(ALL).filter(x=>x.type===c.type);
-    if(mode==='r2k') bag=bag.filter(x=> x.read!==c.read);
+    if(mode==='r2k'||mode==='w2r') bag=bag.filter(x=> x.read!==c.read);
     if(mode==='m2w') bag=bag.filter(x=> x.meaning!==c.meaning);
     const set=new Set([correct]); bag=shuffle(bag);
     for(const x of bag){ if(set.size>=4) break; set.add(valOf(x)); }
@@ -852,7 +918,8 @@ function answer(btn,correct){
     $('q-msg').style.color='var(--bad)';
     $('q-msg').textContent= cur.type==='kana'?`「${cur.front}」唸作 ${cur.read}`
       : cur.type==='vocab'?`「${cur.front}」(${cur.read}) 是「${cur.meaning}」`
-      : `正解：${cur.a} ・ ${cur.q.replace('＿','【'+cur.a+'】')}`;
+      : cur.type==='grammar'?`正解：${cur.a} ・ ${cur.q.replace('＿','【'+cur.a+'】')}`
+      : `正解：${cur.a}${cur.exp?' ・ '+cur.exp:''}`;
   }
   if(test){ if(ok) test.correct++; test.idx++; }
   buttons.forEach(b=>b.disabled=true); save(); renderStats(); updateProg();
@@ -905,8 +972,12 @@ function renderWeak(){
   list.innerHTML='';
   for(const e of entries){
     const it=e.it; const row=document.createElement('div'); row.className='weak-item';
-    const sub = it.type==='grammar'? `<b>${it.read}</b> · ${it.q}` : it.type==='vocab'? `<b>${it.read}</b> · ${it.meaning}` : `唸作 <b>${it.read}</b>`;
-    row.innerHTML=`<span class="wf">${it.front}</span><span class="wr">${sub}</span><span class="wc">錯 ${e.w}/${e.s}</span>`;
+    const front = it.type==='exam' ? it.a : it.front;
+    const sub = it.type==='grammar'? `<b>${it.read}</b> · ${it.q}`
+      : it.type==='vocab'? `<b>${it.read}</b> · ${it.meaning}`
+      : it.type==='exam'? `考題 · ${it.q.replace(/\n/g,' ').slice(0,22)}…`
+      : `唸作 <b>${it.read}</b>`;
+    row.innerHTML=`<span class="wf">${front}</span><span class="wr">${sub}</span><span class="wc">錯 ${e.w}/${e.s}</span>`;
     row.onclick=()=>speakItem(it); list.appendChild(row);
   }
 }
@@ -918,6 +989,7 @@ function renderHome(){
   setBar('ov-kana-n','ov-kana-f', masteryOf(x=>x.type==='kana'));
   setBar('ov-vocab-n','ov-vocab-f', masteryOf(x=>x.type==='vocab'));
   setBar('ov-gram-n','ov-gram-f', masteryOf(x=>x.type==='grammar'));
+  setBar('ov-exam-n','ov-exam-f', masteryOf(x=>x.type==='exam'));
 }
 
 /* ===================== 設定 ===================== */
