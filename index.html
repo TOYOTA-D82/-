@@ -305,7 +305,7 @@
     <button class="tab" role="tab" aria-selected="true"  data-view="home">總覽<span class="jp">ホーム</span></button>
     <button class="tab" role="tab" aria-selected="false" data-view="learn">學習<span class="jp">まなぶ</span></button>
     <button class="tab" role="tab" aria-selected="false" data-view="flash">閃卡<span class="jp">カード</span></button>
-    <button class="tab" role="tab" aria-selected="false" data-view="quiz">測驗<span class="jp">クイズ</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-view="quiz">練習<span class="jp">れんしゅう</span></button>
     <button class="tab" role="tab" aria-selected="false" data-view="weak">弱點<span class="jp">よわてん</span></button>
     <button class="tab" role="tab" aria-selected="false" data-view="settings">設定<span class="jp">せってい</span></button>
   </div>
@@ -324,7 +324,7 @@
     </div>
     <div class="ov-actions">
       <button class="btn solid" data-go="learn">📖 開始學習</button>
-      <button class="btn line" data-go="quiz">✏️ 來測驗</button>
+      <button class="btn line" data-go="quiz">✏️ 來練習</button>
       <button class="btn line" data-go="weak">🎯 看弱點</button>
     </div>
     <div class="ov-guide">
@@ -697,7 +697,7 @@ function renderLearn(){
   const t=firstType();
   $('chart').hidden=t!=='kana'; $('vlist').hidden=t!=='vocab'; $('glist').hidden=t!=='grammar';
   if(t==='kana'){ $('learn-hint').textContent='👆 點任一個假名，會在下方展開發音與記憶口訣（再點一次收合）。'; renderChart(); }
-  else if(t==='vocab'){ $('learn-hint').textContent='👆 點單字可聽發音。讀熟後按下方按鈕測驗，通過就解鎖下一課。'; renderVlist(); }
+  else if(t==='vocab'){ $('learn-hint').textContent='👆 點單字可聽發音。上方「練習」隨你練（不影響進度）；讀熟後按下方「開始測驗」，通過就解鎖下一課。'; renderVlist(); }
   else { $('learn-hint').textContent='👇 點開每條文法看講解與例句，再到「測驗」練填空。'; renderGlist(); }
   renderLessonBar();
 }
@@ -789,8 +789,7 @@ function beginTest(key){
 function startTest(key){ beginTest(key); switchTo('quiz'); }
 function newQuestion(){
   const banner=$('weak-banner');
-  // 單字：進入「測驗」一律走該課闖關測驗（答題累積、通過解鎖）；弱點練習與五十音/文法維持自由練習
-  if(!test && !(quizOverride&&quizOverride.length) && GROUPS[activeGroup] && GROUPS[activeGroup].type==='vocab') beginTest(activeGroup);
+  // 「練習」分頁一律自由練習、不計課程進度；正式闖關測驗只由學習頁「開始測驗」啟動（設定 test）
   if(test){
     if(test.idx>=test.items.length){ return renderTestResult(); }
     banner.classList.add('show');
