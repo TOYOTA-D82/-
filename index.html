@@ -128,7 +128,8 @@
   .vrow { position:relative; display:flex; align-items:center; gap:14px; background:var(--card); border:1px solid var(--card-edge);
     border-radius:12px; padding:12px 14px 12px 18px; }
   .vrow .vword { font-family:var(--font-kana); font-size:24px; font-weight:600; flex:none; }
-  .vrow .vread { font-family:var(--font-kana); color:var(--indigo); font-size:13px; flex:none; white-space:nowrap; }
+  .vrow .vword ruby { ruby-align:center; }
+  .vrow .vword rt { font-family:var(--font-kana); font-size:11px; font-weight:700; color:var(--indigo); line-height:1.1; }
   .vrow .vmean { color:var(--ink); font-size:15px; flex:1 1 auto; min-width:0; }
   .vrow .mark { top:8px; left:7px; right:auto; }
   .vrow .speak { width:40px; height:40px; font-size:17px; flex:none; }
@@ -489,6 +490,29 @@ const LES8=[['赤','あか','紅色'],['青','あお','藍色'],['白','しろ',
 const LES9=[['目','め','眼睛'],['耳','みみ','耳朵'],['口','くち','嘴巴'],['鼻','はな','鼻子'],['手','て','手'],['足','あし','腳'],['頭','あたま','頭'],['顔','かお','臉'],['上','うえ','上面'],['下','した','下面'],['前','まえ','前面'],['後ろ','うしろ','後面'],['中','なか','裡面'],['外','そと','外面'],['右','みぎ','右邊'],['左','ひだり','左邊'],['隣','となり','隔壁']];
 const LES10=[['雨','あめ','雨'],['雪','ゆき','雪'],['風','かぜ','風'],['空','そら','天空'],['海','うみ','海'],['山','やま','山'],['川','かわ','河'],['花','はな','花'],['木','き','樹'],['暑い','あつい','熱的（天氣）'],['寒い','さむい','冷的（天氣）']];
 
+// 振假名（furigana）：逐字對應的讀音；能拆字的逐字標，熟字訓則整詞標。
+// 格式：以逗號分段，「漢字:讀音」為需標音段，純假名段直接寫。
+// 未列出者：單一漢字→整字標音；熟字訓（今日/明日/昨日/果物/時計）→整詞標音；純假名→不標。
+const FURI_RAW={
+ '友達':'友:とも,達:だち','先生':'先:せん,生:せい','学生':'学:がく,生:せい','子供':'子:こ,供:ども','名前':'名:な,前:まえ',
+ '毎日':'毎:まい,日:にち','時間':'時:じ,間:かん','週末':'週:しゅう,末:まつ','午前':'午:ご,前:ぜん','午後':'午:ご,後:ご',
+ '月曜日':'月:げつ,曜:よう,日:び','火曜日':'火:か,曜:よう,日:び','水曜日':'水:すい,曜:よう,日:び','木曜日':'木:もく,曜:よう,日:び','金曜日':'金:きん,曜:よう,日:び','土曜日':'土:ど,曜:よう,日:び','日曜日':'日:にち,曜:よう,日:び',
+ '学校':'学:がっ,校:こう','会社':'会:かい,社:しゃ','行く':'行:い,く','来る':'来:く,る','帰る':'帰:かえ,る',
+ 'お茶':'お,茶:ちゃ','ご飯':'ご,飯:はん','野菜':'野:や,菜:さい','牛乳':'牛:ぎゅう,乳:にゅう','お酒':'お,酒:さけ','食べる':'食:た,べる','飲む':'飲:の,む','買う':'買:か,う',
+ '病院':'病:びょう,院:いん','銀行':'銀:ぎん,行:こう','郵便局':'郵:ゆう,便:びん,局:きょく','図書館':'図:と,書:しょ,館:かん','公園':'公:こう,園:えん','電車':'電:でん,車:しゃ',
+ '電話':'電:でん,話:わ','お金':'お,金:かね','天気':'天:てん,気:き','見る':'見:み,る','聞く':'聞:き,く','読む':'読:よ,む','書く':'書:か,く','話す':'話:はな,す','面白い':'面:おも,白:しろ,い','高い':'高:たか,い','安い':'安:やす,い',
+ '黄色':'黄:き,色:いろ','茶色':'茶:ちゃ,色:いろ','大きい':'大:おお,きい','小さい':'小:ちい,さい','新しい':'新:あたら,しい','古い':'古:ふる,い',
+ '後ろ':'後:うし,ろ','暑い':'暑:あつ,い','寒い':'寒:さむ,い'
+};
+const FURI={};
+for(const w in FURI_RAW){ FURI[w]=FURI_RAW[w].split(',').map(p=>{ const i=p.indexOf(':'); return i<0?p:[p.slice(0,i),p.slice(i+1)]; }); }
+function hasKanji(s){ return /[㐀-鿿]/.test(s); }
+function rubyHTML(word, reading){
+  const seg=FURI[word];
+  if(seg) return seg.map(s=> Array.isArray(s)?`<ruby>${s[0]}<rt>${s[1]}</rt></ruby>`:s).join('');
+  return hasKanji(word)?`<ruby>${word}<rt>${reading}</rt></ruby>`:word;
+}
+
 /* ===================== 文法 ===================== */
 const GP_PART=[
  {id:'g-wa', title:'は（主題）', pat:'A は B です', cn:'「は」標出句子的主題，這裡唸作 wa。「A は B です」＝A 是 B。',
@@ -720,7 +744,7 @@ function renderVlist(){
   const box=$('vlist'); box.innerHTML='';
   for(const it of pool().filter(x=>x.type==='vocab')){
     const w=stat(it.id).w; const row=document.createElement('div'); row.className='vrow';
-    row.innerHTML=(w>0?`<span class="mark" data-lv="${markLevel(w)}" title="答錯 ${w} 次"></span>`:'')+`<span class="vword">${it.front}</span><span class="vread">${it.read}</span><span class="vmean">${it.meaning}</span><button class="speak" aria-label="發音">🔊</button>`;
+    row.innerHTML=(w>0?`<span class="mark" data-lv="${markLevel(w)}" title="答錯 ${w} 次"></span>`:'')+`<span class="vword">${rubyHTML(it.front,it.read)}</span><span class="vmean">${it.meaning}</span><button class="speak" aria-label="發音">🔊</button>`;
     row.querySelector('.speak').onclick=()=>say(it.read); box.appendChild(row);
   }
 }
