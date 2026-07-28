@@ -228,6 +228,12 @@
   .weak-empty { text-align:center; color:var(--ink-soft); padding:44px 20px; font-size:14px; line-height:1.8; }
 
   /* 總覽 */
+  .mock-cta { width:100%; border:none; cursor:pointer; text-align:left; margin-bottom:16px; border-radius:14px; padding:16px 18px;
+    background:linear-gradient(135deg, var(--vermil), #b8371c); color:#fff; font:inherit; font-weight:800; font-size:18px;
+    box-shadow:0 6px 18px var(--shadow); transition:transform .1s; }
+  .mock-cta small { display:block; font-weight:600; font-size:12.5px; opacity:.92; margin-top:3px; }
+  .mock-cta:active { transform:scale(.98); }
+  .mock-cta:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
   .ov-bars { display:flex; flex-direction:column; gap:12px; margin-bottom:18px; }
   .ov-bar { background:var(--card); border:1px solid var(--card-edge); border-radius:12px; padding:13px 15px; }
   .ov-bar .r1 { display:flex; justify-content:space-between; align-items:baseline; font-weight:800; font-size:14px; margin-bottom:9px; }
@@ -323,6 +329,7 @@
 
   <!-- 總覽 -->
   <section id="view-home">
+    <button class="mock-cta" id="btn-mock">🏁 一鍵模擬考<small>跨科抽 21 題 · 12 分鐘計時 · 仿真實考試計分</small></button>
     <div class="ov-bars">
       <div class="ov-bar"><div class="r1"><span>🎴 五十音</span><span id="ov-kana-n">0/0</span></div><div class="track"><div class="fill" id="ov-kana-f" style="background:var(--indigo)"></div></div></div>
       <div class="ov-bar"><div class="r1"><span>📚 單字</span><span id="ov-vocab-n">0/0</span></div><div class="track"><div class="fill" id="ov-vocab-f" style="background:var(--gold)"></div></div></div>
@@ -684,6 +691,14 @@ const LI_RESP=[
  {audio:'この ペンは いくらですか。', ask:'聽完，選最適合的回答', a:'100円です。', opts:['100円です。','月よう日です。','2時です。','3ぼんです。'], exp:'問多少錢→報價錢'},
  {audio:'いっしょに ひるごはんを たべませんか。', ask:'聽完，選最適合的回答', a:'いいですね。', opts:['いいですね。','どういたしまして。','おやすみなさい。','はじめまして。'], exp:'邀約→好啊'},
  {audio:'おげんきですか。', ask:'聽完，選最適合的回答', a:'はい、げんきです。', opts:['はい、げんきです。','300円です。','水よう日です。','わたしのです。'], exp:'你好嗎→我很好'},
+ {audio:'すみません。', ask:'聽完，選最適合的回答', a:'はい、なんですか。', opts:['はい、なんですか。','どういたしまして。','おやすみなさい。','いただきます。'], exp:'叫人→是，什麼事'},
+ {audio:'おさきに しつれいします。', ask:'聽完，選最適合的回答', a:'おつかれさまでした。', opts:['おつかれさまでした。','いってらっしゃい。','はじめまして。','ごちそうさま。'], exp:'我先走了→您辛苦了'},
+ {audio:'これ、どうぞ。', ask:'聽完，選最適合的回答', a:'ありがとうございます。', opts:['ありがとうございます。','いいえ、まだです。','9時です。','はい、そうです。'], exp:'給你→謝謝'},
+ {audio:'きょうは 何よう日ですか。', ask:'聽完，選最適合的回答', a:'火よう日です。', opts:['火よう日です。','3時です。','500円です。','日本人です。'], exp:'問星期→報星期'},
+ {audio:'えいがは どうでしたか。', ask:'聽完，選最適合的回答', a:'おもしろかったです。', opts:['おもしろかったです。','1000円です。','あそこです。','3人です。'], exp:'電影如何→很有趣'},
+ {audio:'トイレは どこですか。', ask:'聽完，選最適合的回答', a:'あそこです。', opts:['あそこです。','3時です。','わたしのです。','はい、そうです。'], exp:'廁所在哪→在那裡'},
+ {audio:'コーヒーと おちゃ、どちらが いいですか。', ask:'聽完，選最適合的回答', a:'コーヒーが いいです。', opts:['コーヒーが いいです。','いいえ、ちがいます。','3時です。','どういたしまして。'], exp:'選哪個→咖啡好'},
+ {audio:'しゅくだいは おわりましたか。', ask:'聽完，選最適合的回答', a:'はい、おわりました。', opts:['はい、おわりました。','どういたしまして。','おげんきで。','500円です。'], exp:'作業做完了嗎→做完了'},
 ];
 const LI_HEAR=[
  {audio:'わたしは まいあさ 7時に おきます。', ask:'幾點起床？', a:'7時', opts:['7時','6時','8時','9時'], exp:'7時に おきます'},
@@ -692,6 +707,14 @@ const LI_HEAR=[
  {audio:'わたしの かばんは くろいです。', ask:'包包是什麼顏色？', a:'くろ', opts:['くろ','あか','あお','しろ'], exp:'くろい かばん'},
  {audio:'きのうは あめでしたが、きょうは いい てんきです。', ask:'今天天氣如何？', a:'いい てんき', opts:['いい てんき','あめ','ゆき','くもり'], exp:'きょうは いい てんき'},
  {audio:'えきまで バスで 行きます。', ask:'怎麼去車站？', a:'バス', opts:['バス','でんしゃ','じてんしゃ','タクシー'], exp:'バスで 行きます'},
+ {audio:'わたしは いえから かいしゃまで じてんしゃで 行きます。', ask:'怎麼去公司？', a:'じてんしゃ', opts:['じてんしゃ','でんしゃ','バス','あるいて'], exp:'じてんしゃで 行きます'},
+ {audio:'ケーキを みっつと ジュースを ひとつ かいました。', ask:'買了幾個蛋糕？', a:'みっつ', opts:['みっつ','ひとつ','ふたつ','よっつ'], exp:'ケーキを みっつ（3個）'},
+ {audio:'テストは らいしゅうの 月よう日です。', ask:'考試是哪天？', a:'月よう日', opts:['月よう日','火よう日','金よう日','日よう日'], exp:'月よう日です'},
+ {audio:'へやに テレビは ありますが、パソコンは ありません。', ask:'房間裡有什麼？', a:'テレビ', opts:['テレビ','パソコン','でんわ','とけい'], exp:'テレビは あります'},
+ {audio:'あねは 大学生で、あには こうこうせいです。', ask:'姊姊是什麼身分？', a:'大学生', opts:['大学生','こうこうせい','せんせい','かいしゃいん'], exp:'あね（姊姊）＝大学生'},
+ {audio:'あした しけんが ありますから、こんばんは べんきょうします。', ask:'今晚要做什麼？', a:'べんきょうします', opts:['べんきょうします','あそびます','ねます','えいがを 見ます'], exp:'こんばん べんきょうします'},
+ {audio:'デパートは 10時から 8時までです。', ask:'百貨幾點開門？', a:'10時', opts:['10時','8時','9時','7時'], exp:'10時から'},
+ {audio:'たなかさんは いま でんわで はなして います。', ask:'田中現在在做什麼？', a:'でんわで はなして います', opts:['でんわで はなして います','ごはんを たべて います','テレビを 見て います','ねて います'], exp:'でんわで はなして います'},
 ];
 
 const GROUPS = {
@@ -935,8 +958,49 @@ $('f-dunno').onclick=()=>{ if(!deck.length) return; bumpStat(curCard().id,true);
 function nextCard(){ di++; if(di%deck.length===0) deck=shuffle(deck); showCard(); }
 
 /* ===================== 測驗 ===================== */
-let cur=null, mode='k2r', locked=false, test=null;
+let cur=null, mode='k2r', locked=false, test=null, mock=null;
 function quizPool(){ return quizOverride&&quizOverride.length? quizOverride : pool(); }
+/* ---- 一鍵模擬考：跨科抽題、計時、算分 ---- */
+function sampleN(arr,n){ return shuffle(arr).slice(0,n); }
+function buildMock(){
+  const pick=[]; const add=(key,n,sec)=> sampleN(itemsOf(key),n).forEach(it=>pick.push({it,sec}));
+  add('exyomi',5,'文字・語彙'); add('exword',4,'文字・語彙'); add('exgram',5,'文法');
+  add('exread',3,'讀解'); add('liresp',2,'聽解'); add('lihear',2,'聽解');
+  return shuffleSections(pick);
+}
+// 讓同科目大致集中、但科目間照考試順序（文字語彙→文法→讀解→聽解）
+function shuffleSections(list){
+  const order=['文字・語彙','文法','讀解','聽解']; const out=[];
+  for(const s of order){ out.push(...shuffle(list.filter(x=>x.sec===s))); }
+  return out;
+}
+function fmtTime(s){ const m=Math.floor(s/60), ss=s%60; return m+':'+String(ss).padStart(2,'0'); }
+function startMock(){
+  test=null; quizOverride=null; streak=0;
+  mock={ list:buildMock(), idx:0, correct:0, perSec:{}, start:Date.now(), limitSec:720, timer:null };
+  mock.timer=setInterval(()=>{ if(!mock) return; const rem=mock.limitSec-Math.floor((Date.now()-mock.start)/1000);
+    if(rem<=0){ finishMock(); } else if(view==='quiz'){ updateMockBanner(); } },1000);
+  switchTo('quiz');
+}
+function updateMockBanner(){ if(!mock) return; const rem=Math.max(0,mock.limitSec-Math.floor((Date.now()-mock.start)/1000));
+  $('weak-banner-txt').textContent=`🏁 模擬考 · 第 ${Math.min(mock.idx+1,mock.list.length)}/${mock.list.length} · ⏱ ${fmtTime(rem)}`; }
+function finishMock(){
+  const m=mock; if(!m) return; clearInterval(m.timer); mock=null;
+  const total=m.list.length, correct=m.correct, pct=Math.round(correct/total*100), pass=correct/total>=0.6;
+  const used=Math.min(m.limitSec, Math.floor((Date.now()-m.start)/1000));
+  save(); renderStats(); locked=true;
+  $('weak-banner').classList.remove('show');
+  const prompt=$('q-prompt'); prompt.classList.remove('q-latin','q-sentence','q-reading','q-listen'); $('q-stamp').classList.remove('show');
+  $('q-ask').textContent= pass?'模擬考 合格！':'模擬考 結果'; $('q-main').textContent= pass?'🎊':'📋'; $('q-msg').textContent='';
+  let rows=''; for(const s of ['文字・語彙','文法','讀解','聽解']){ const d=m.perSec[s]; if(d) rows+=`<div style="display:flex;justify-content:space-between;padding:5px 2px;border-bottom:1px solid var(--line)"><span>${s}</span><b>${d.c}/${d.t}</b></div>`; }
+  $('q-opts').innerHTML=`<div class="test-result" style="grid-column:1/-1">
+    <div class="tr-score" style="color:${pass?'var(--good)':'var(--bad)'}">${correct} / ${total}（${pct}%）</div>
+    <div class="tr-sub">${pass?'達到 60% 合格標準 👏':'還沒到 60%，再多練幾回！'} ・ 用時 ${fmtTime(used)}</div>
+    <div style="text-align:left;max-width:280px;margin:14px auto 0;font-size:14px">${rows}</div>
+    <div class="tr-actions" id="tr-actions"></div></div>`;
+  const act=$('tr-actions'); const mk=(cls,t,fn)=>{const b=document.createElement('button');b.className='btn '+cls;b.textContent=t;b.onclick=fn;act.appendChild(b);};
+  mk('solid','再考一次',()=>startMock()); mk('line','回總覽',()=>switchTo('home'));
+}
 function beginTest(key){
   activeCat='vocab'; activeGroup=key; quizOverride=null;
   test={ key, items:shuffle(itemsOf(key)), idx:0, correct:0 }; streak=0;
@@ -944,6 +1008,11 @@ function beginTest(key){
 function startTest(key){ beginTest(key); switchTo('quiz'); }
 function newQuestion(){
   const banner=$('weak-banner');
+  if(mock){
+    if(mock.idx>=mock.list.length){ return finishMock(); }
+    banner.classList.add('show'); updateMockBanner(); $('weak-clear').textContent='結束';
+    locked=false; cur=mock.list[mock.idx].it; renderQuestionFor(cur); updateProg(); return;
+  }
   // 「練習」分頁一律自由練習、不計課程進度；正式闖關測驗只由學習頁「開始測驗」啟動（設定 test）
   if(test){
     if(test.idx>=test.items.length){ return renderTestResult(); }
@@ -1022,11 +1091,13 @@ function answer(btn,correct){
       : cur.type==='listen'?`正解：${cur.a}　（聽到：「${cur.audio}」）`
       : `正解：${cur.a}${cur.exp?' ・ '+cur.exp:''}`;
   }
-  if(test){ if(ok) test.correct++; test.idx++; }
+  if(mock){ const cell=mock.list[mock.idx]; const ps=mock.perSec[cell.sec]||(mock.perSec[cell.sec]={c:0,t:0}); ps.t++; if(ok){mock.correct++;ps.c++;} mock.idx++; }
+  else if(test){ if(ok) test.correct++; test.idx++; }
   buttons.forEach(b=>b.disabled=true); save(); renderStats(); updateProg();
   setTimeout(newQuestion, ok?850:1700);
 }
 function updateProg(){
+  if(mock){ $('q-combo').textContent=''; $('q-prog').style.width=Math.min(100,mock.idx/mock.list.length*100)+'%'; return; }
   if(test){ $('q-combo').textContent=`答對 ${test.correct}`; $('q-prog').style.width=Math.min(100,test.idx/test.items.length*100)+'%'; return; }
   $('q-combo').textContent= streak>1?('🔥 x'+streak):''; $('q-prog').style.width=Math.min(100,P.dailyCount/GOAL*100)+'%';
 }
@@ -1052,7 +1123,7 @@ function renderTestResult(){
   else { mk('solid','重測這課',()=>startTest(key)); mk('line','回去複習',()=>{ test=null; switchTo('learn'); }); }
   if(pass&&newly) toast(next?('🔓 解鎖「'+GROUPS[next].name+'」！'):'🎉 完成所有單字課程！');
 }
-$('weak-clear').onclick=()=>{ if(test){ test=null; $('weak-banner').classList.remove('show'); switchTo('learn'); return; } quizOverride=null; $('weak-banner').classList.remove('show'); newQuestion(); };
+$('weak-clear').onclick=()=>{ if(mock){ clearInterval(mock.timer); mock=null; $('weak-banner').classList.remove('show'); switchTo('home'); return; } if(test){ test=null; $('weak-banner').classList.remove('show'); switchTo('learn'); return; } quizOverride=null; $('weak-banner').classList.remove('show'); newQuestion(); };
 document.addEventListener('keydown',e=>{
   if(view!=='quiz'||locked) return; const n=parseInt(e.key,10);
   if(n>=1&&n<=9){ const b=$('q-opts').children[n-1]; if(b&&b.classList.contains('opt')) b.click(); }
@@ -1117,11 +1188,11 @@ $('btn-reset').onclick=()=>{ if(confirm('確定重置全部進度？XP、連勝�
 /* ===================== 分頁 ===================== */
 function switchTo(v){
   view=v;
-  if(v!=='quiz'){ if(test){ test=null; } $('weak-banner').classList.remove('show'); }
+  if(v!=='quiz'){ if(test){ test=null; } if(mock){ clearInterval(mock.timer); mock=null; } $('weak-banner').classList.remove('show'); }
   document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected', x.dataset.view===v));
   $('view-home').hidden=v!=='home'; $('view-learn').hidden=v!=='learn'; $('view-flash').hidden=v!=='flash';
   $('view-quiz').hidden=v!=='quiz'; $('view-weak').hidden=v!=='weak'; $('view-settings').hidden=v!=='settings';
-  $('picker').hidden = !(v==='learn'||v==='flash'||v==='quiz');
+  $('picker').hidden = !(v==='learn'||v==='flash'||v==='quiz') || !!mock;
   if(v==='home') renderHome();
   if(v==='learn') renderLearn();
   if(v==='flash') resetFlash();
@@ -1131,6 +1202,7 @@ function switchTo(v){
 }
 document.querySelectorAll('.tab').forEach(t=> t.onclick=()=>switchTo(t.dataset.view));
 document.querySelectorAll('[data-go]').forEach(b=> b.onclick=()=>switchTo(b.dataset.go));
+$('btn-mock').onclick=()=>startMock();
 
 /* ===================== 啟動 ===================== */
 applyTheme(); renderPicker(); renderStats(); renderLearn(); resetFlash(); newQuestion(); renderHome(); switchTo('home');
