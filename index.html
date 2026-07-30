@@ -977,7 +977,7 @@ function shuffleSections(list){
 function fmtTime(s){ const m=Math.floor(s/60), ss=s%60; return m+':'+String(ss).padStart(2,'0'); }
 function startMock(){
   test=null; quizOverride=null; streak=0;
-  mock={ list:buildMock(), idx:0, correct:0, perSec:{}, start:Date.now(), limitSec:720, timer:null };
+  mock={ list:buildMock(), idx:0, correct:0, perSec:{}, wrong:[], start:Date.now(), limitSec:720, timer:null };
   mock.timer=setInterval(()=>{ if(!mock) return; const rem=mock.limitSec-Math.floor((Date.now()-mock.start)/1000);
     if(rem<=0){ finishMock(); } else if(view==='quiz'){ updateMockBanner(); } },1000);
   switchTo('quiz');
@@ -999,7 +999,16 @@ function finishMock(){
     <div style="text-align:left;max-width:280px;margin:14px auto 0;font-size:14px">${rows}</div>
     <div class="tr-actions" id="tr-actions"></div></div>`;
   const act=$('tr-actions'); const mk=(cls,t,fn)=>{const b=document.createElement('button');b.className='btn '+cls;b.textContent=t;b.onclick=fn;act.appendChild(b);};
-  mk('solid','再考一次',()=>startMock()); mk('line','回總覽',()=>switchTo('home'));
+  const wrongs=m.wrong.slice();
+  if(wrongs.length){
+    mk('solid','🎯 複習錯題（'+wrongs.length+'）',()=>{ quizOverride=wrongs; streak=0;
+      $('weak-banner-txt').textContent='🎯 模擬考錯題複習 · '+wrongs.length+' 題'; $('weak-banner').classList.add('show');
+      switchTo('quiz'); newQuestion(); });
+    mk('line','再考一次',()=>startMock());
+  } else {
+    mk('solid','再考一次',()=>startMock());
+  }
+  mk('line','回總覽',()=>switchTo('home'));
 }
 function beginTest(key){
   activeCat='vocab'; activeGroup=key; quizOverride=null;
@@ -1091,7 +1100,7 @@ function answer(btn,correct){
       : cur.type==='listen'?`正解：${cur.a}　（聽到：「${cur.audio}」）`
       : `正解：${cur.a}${cur.exp?' ・ '+cur.exp:''}`;
   }
-  if(mock){ const cell=mock.list[mock.idx]; const ps=mock.perSec[cell.sec]||(mock.perSec[cell.sec]={c:0,t:0}); ps.t++; if(ok){mock.correct++;ps.c++;} mock.idx++; }
+  if(mock){ const cell=mock.list[mock.idx]; const ps=mock.perSec[cell.sec]||(mock.perSec[cell.sec]={c:0,t:0}); ps.t++; if(ok){mock.correct++;ps.c++;} else { mock.wrong.push(cell.it); } mock.idx++; }
   else if(test){ if(ok) test.correct++; test.idx++; }
   buttons.forEach(b=>b.disabled=true); save(); renderStats(); updateProg();
   setTimeout(newQuestion, ok?850:1700);
