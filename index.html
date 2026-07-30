@@ -212,7 +212,8 @@
   .opt:disabled { cursor:default; }
   .shake { animation:shake .35s; }
   @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-7px)} 40%,80%{transform:translateX(7px)} }
-  .quiz-msg { text-align:center; min-height:22px; font-weight:700; font-size:14px; }
+  .quiz-msg { text-align:center; min-height:22px; font-weight:700; font-size:14px; line-height:1.6; }
+  #q-next { justify-self:center; margin:2px auto 0; min-width:170px; }
 
   .weak-sum { display:flex; gap:10px; margin-bottom:16px; }
   .weak-sum .box { flex:1; background:var(--card); border:1px solid var(--card-edge); border-radius:12px; padding:12px 8px; text-align:center; }
@@ -397,6 +398,7 @@
       </div>
       <div class="options" id="q-opts"></div>
       <div class="quiz-msg" id="q-msg"></div>
+      <button class="btn solid" id="q-next" hidden>下一題 ▶</button>
     </div>
   </section>
 
@@ -721,31 +723,31 @@ const OFF_V=[
  {q:'リーさんは もりさんに ペンを かしました。',opts:['リーさんは もりさんに ペンを もらいました。','もりさんは リーさんに ペンを もらいました。','リーさんは もりさんに ペンを かりました。','もりさんは リーさんに ペンを かりました。'],ans:4,ask:OFF_D},
 ];
 const OFF_G=[
- {q:'わたしは あしたの ひこうき（　）国へ 帰ります。',opts:['に','で','か','を'],ans:2},
- {q:'先週 デパートで かばん（　）くつなどを 買いました。',opts:['は','も','へ','や'],ans:4},
- {q:'わたしは 毎朝 7時ごろ 家（　）出ます。',opts:['を','と','が','で'],ans:1},
- {q:'きのう スーパーで 田中さん（　）会いました。',opts:['を','の','で','に'],ans:4},
- {q:'わたしの うちの ほんだなは、きょねん 父（　）作りました。',opts:['や','が','を','で'],ans:2},
- {q:'きょう やおやで りんごを 買いました。五つ（　）200円でした。',opts:['に','と','で','や'],ans:3},
- {q:'きのう（　）少し 寒かったですが、今日（　）寒くないです。',opts:['は／は','に／に','も／も','を／を'],ans:1},
- {q:'みなみまちは、海が きれい（　）、しずかです。',opts:['も','や','で','と'],ans:3},
- {q:'前川「林さん、（　）に ある カメラは 林さんのですか。」林「いいえ。田中さんのですよ。」',opts:['そこ','どこ','その','どの'],ans:1},
- {q:'Ａ「先週 はじめて スキーを しました。」Ｂ「そうですか。（　）でしたか。」Ａ「とても 楽しかったです。」',opts:['いくつ','いかが','どなた','どちら'],ans:2},
- {q:'森「大学の じゅぎょうは 始まりましたか。」ケン「いいえ、（　）です。来週 始まります。」',opts:['よく','もう','ちょっと','まだ'],ans:4},
- {q:'（病院で）いしゃ「今日から 一週間 薬を 飲んで、来週の 月曜日に（　）来て ください。」',opts:['たくさん','あまり','また','だんだん'],ans:3},
- {q:'父は 毎朝 コーヒーを（　）ながら 新聞を 読みます。',opts:['飲む','飲み','飲んで','飲んだ'],ans:2},
- {q:'わたしは 小さいとき、なっとうが 好き（　）でした。',opts:['ない','じゃない','ありません','じゃありません'],ans:4},
- {q:'（ケーキ屋で）山下「いちごの ケーキを 二つ（　）。」',opts:['ありますか','どうぞ','ください','ほしいですか'],ans:3},
- {q:'リー「日曜日に、わたしの 家で アンさんと べんきょうを します。キムさんも（　）。」キム「あ、行きたいです。」',opts:['来ませんか','来ていますか','来ませんでしたか','来ていましたか'],ans:1},
+ {q:'わたしは あしたの ひこうき（　）国へ 帰ります。',opts:['に','で','か','を'],ans:2,exp:'交通手段用「で」'},
+ {q:'先週 デパートで かばん（　）くつなどを 買いました。',opts:['は','も','へ','や'],ans:4,exp:'AやB（例舉並列）用「や」'},
+ {q:'わたしは 毎朝 7時ごろ 家（　）出ます。',opts:['を','と','が','で'],ans:1,exp:'離開場所（家を出る）用「を」'},
+ {q:'きのう スーパーで 田中さん（　）会いました。',opts:['を','の','で','に'],ans:4,exp:'「会う」的對象用「に」'},
+ {q:'わたしの うちの ほんだなは、きょねん 父（　）作りました。',opts:['や','が','を','で'],ans:2,exp:'動作者用「が」'},
+ {q:'きょう やおやで りんごを 買いました。五つ（　）200円でした。',opts:['に','と','で','や'],ans:3,exp:'數量＋で＝合計（五個共200円）'},
+ {q:'きのう（　）少し 寒かったですが、今日（　）寒くないです。',opts:['は／は','に／に','も／も','を／を'],ans:1,exp:'昨天…今天…（對比）用「は／は」'},
+ {q:'みなみまちは、海が きれい（　）、しずかです。',opts:['も','や','で','と'],ans:3,exp:'な形容詞連接用「で」（きれいで、静か）'},
+ {q:'前川「林さん、（　）に ある カメラは 林さんのですか。」林「いいえ。田中さんのですよ。」',opts:['そこ','どこ','その','どの'],ans:1,exp:'指對方那邊用「そこ」（そこに ある）'},
+ {q:'Ａ「先週 はじめて スキーを しました。」Ｂ「そうですか。（　）でしたか。」Ａ「とても 楽しかったです。」',opts:['いくつ','いかが','どなた','どちら'],ans:2,exp:'問感想「如何」用「いかが」'},
+ {q:'森「大学の じゅぎょうは 始まりましたか。」ケン「いいえ、（　）です。来週 始まります。」',opts:['よく','もう','ちょっと','まだ'],ans:4,exp:'還沒→「まだ」'},
+ {q:'（病院で）いしゃ「今日から 一週間 薬を 飲んで、来週の 月曜日に（　）来て ください。」',opts:['たくさん','あまり','また','だんだん'],ans:3,exp:'再一次→「また」'},
+ {q:'父は 毎朝 コーヒーを（　）ながら 新聞を 読みます。',opts:['飲む','飲み','飲んで','飲んだ'],ans:2,exp:'ます形＋ながら（一邊…一邊…）'},
+ {q:'わたしは 小さいとき、なっとうが 好き（　）でした。',opts:['ない','じゃない','ありません','じゃありません'],ans:4,exp:'な形容詞過去否定：好きじゃありませんでした'},
+ {q:'（ケーキ屋で）山下「いちごの ケーキを 二つ（　）。」',opts:['ありますか','どうぞ','ください','ほしいですか'],ans:3,exp:'點餐「請給我…」用「〜をください」'},
+ {q:'リー「日曜日に、わたしの 家で アンさんと べんきょうを します。キムさんも（　）。」キム「あ、行きたいです。」',opts:['来ませんか','来ていますか','来ませんでしたか','来ていましたか'],ans:1,exp:'邀約「要不要來」→「来ませんか」'},
 ];
 const OPA='わたしは 毎朝 ご飯と なっとうか、パンと たまごを 食べて、学校へ 行きます。でも、けさは なにも 食べませんでした。バナナを 学校へ 持って いきました。起きた 時間が おそかったからです。';
 const OPB='（大学で）「日本語Ⅰ」と「日本語Ⅱ」の クラスの みなさんへ\n今日 出川先生は お昼まで お休みです。午前の「日本語Ⅰ」の クラスは ありません。午後の「日本語Ⅱ」の クラスは あります。\n・「日本語Ⅰ」の しゅくだいは 来週 出して ください。';
 const OPC='わたしは きのうの 日曜日、友だちと サッカーを しました。朝から ゆうがたまで しましたから、とても つかれました。ゆうべは ばんご飯を 食べた あとで、すぐに ねました。ですから、今日の かんじテストの べんきょうが できませんでした。\nけさは 6時に 起きました。シャワーを あびて、朝ご飯を 食べました。それから、すぐ かんじの テキストの 1ページから 10ページまで べんきょうしました。それから 学校へ 行きました。とても いそがしい 朝でした。\nしかし、きょうしつで かんじを べんきょうして いる 人は いませんでした。\nわたしは まちがえました。テストは 今日では なくて、あしたでした。';
 const OFF_R=[
- {q:OPA+'\n\n問：けさ「わたし」は 学校へ 行く 前に、何を 食べましたか。',opts:['ご飯と なっとうを 食べました。','パンと たまごを 食べました。','なにも 食べませんでした。','バナナを 食べました。'],ans:3},
- {q:OPB+'\n\n問：大学は「日本語Ⅰ」の クラスの 学生に 何が 言いたいですか。',opts:['今日 クラスは ありません。しゅくだいは 午後 出して ください。','今日 クラスは ありません。しゅくだいは 来週 出して ください。','今日 クラスが ありますが、しゅくだいは 来週 出して ください。','今日 クラスが ありますから、しゅくだいを 出して ください。'],ans:2},
- {q:OPC+'\n\n問：どうして けさは 6時に 起きましたか。',opts:['朝から ゆうがたまで サッカーを したかったから','かんじテストの べんきょうが したかったから','シャワーを あびて、朝ご飯を 食べたかったから','学校へ 行って、べんきょうが したかったから'],ans:2},
- {q:OPC+'\n\n問：チンさんは 何を まちがえましたか。',opts:['かんじの テキスト','かんじの テキストの ページ','かんじの テストが ある 日','かんじの テストを する きょうしつ'],ans:3},
+ {q:OPA+'\n\n問：けさ「わたし」は 学校へ 行く 前に、何を 食べましたか。',opts:['ご飯と なっとうを 食べました。','パンと たまごを 食べました。','なにも 食べませんでした。','バナナを 食べました。'],ans:3,exp:'今早什麼都沒吃；香蕉是「帶去」學校，不是吃掉'},
+ {q:OPB+'\n\n問：大学は「日本語Ⅰ」の クラスの 学生に 何が 言いたいですか。',opts:['今日 クラスは ありません。しゅくだいは 午後 出して ください。','今日 クラスは ありません。しゅくだいは 来週 出して ください。','今日 クラスが ありますが、しゅくだいは 来週 出して ください。','今日 クラスが ありますから、しゅくだいを 出して ください。'],ans:2,exp:'日本語Ⅰ今天停課（午前休講）、作業下週交'},
+ {q:OPC+'\n\n問：どうして けさは 6時に 起きましたか。',opts:['朝から ゆうがたまで サッカーを したかったから','かんじテストの べんきょうが したかったから','シャワーを あびて、朝ご飯を 食べたかったから','学校へ 行って、べんきょうが したかったから'],ans:2,exp:'昨天沒念書，所以早起準備漢字考試'},
+ {q:OPC+'\n\n問：チンさんは 何を まちがえましたか。',opts:['かんじの テキスト','かんじの テキストの ページ','かんじの テストが ある 日','かんじの テストを する きょうしつ'],ans:3,exp:'弄錯的是「考試日期」（是明天不是今天）'},
 ];
 
 // 聽解（用日語語音出題）
@@ -821,7 +823,7 @@ function itemsOf(key){
   // grammar：把每個練習題攤平成 item
   const out=[];
   g.points.forEach(p=> p.qs.forEach((qq,i)=> out.push({
-    id:p.id+'#'+i, type:'grammar', title:p.title, q:qq.q, opts:qq.opts, a:qq.a,
+    id:p.id+'#'+i, type:'grammar', title:p.title, q:qq.q, opts:qq.opts, a:qq.a, exp:qq.note||p.cn,
     front:qq.a, read:p.title, meaning:qq.q
   })));
   return out;
@@ -1086,7 +1088,7 @@ function beginTest(key){
 }
 function startTest(key){ beginTest(key); switchTo('quiz'); }
 function newQuestion(){
-  const banner=$('weak-banner');
+  const banner=$('weak-banner'); $('q-next').hidden=true;
   if(mock){
     if(mock.idx>=mock.list.length){ return finishMock(); }
     banner.classList.add('show'); updateMockBanner(); $('weak-clear').textContent='結束';
@@ -1150,30 +1152,35 @@ function renderQuestionFor(c){
     b.onclick=()=>answer(b,correct); box.appendChild(b);
   });
 }
+function explainText(it){
+  if(it.type==='kana') return `「${it.front}」唸作 ${it.read}`;
+  if(it.type==='vocab') return `「${it.front}」（${it.read}）＝${it.meaning}`;
+  if(it.type==='grammar') return `正解：${it.a}${it.exp?'　'+it.exp:''}`;
+  if(it.type==='listen') return `正解：${it.a}　聽到：「${it.audio}」${it.exp?'　'+it.exp:''}`;
+  return `正解：${it.a}${it.exp?'　'+it.exp:''}`; // exam
+}
 function answer(btn,correct){
   if(locked) return; locked=true;
   const ok=btn.dataset.val===correct; const buttons=[...$('q-opts').children];
   bumpStat(cur.id,!ok);
+  const expl=explainText(cur);
   if(ok){
     btn.classList.add('correct'); streak++; if(streak>P.best) P.best=streak;
     const bonus=streak>=3?Math.min(streak,8):0; P.xp+=10+bonus; P.dailyCount++;
     speakItem(cur); $('q-stamp').classList.add('show'); $('q-msg').style.color='var(--good)';
-    $('q-msg').textContent= streak>=3?`太強了！連勝 ${streak} 🔥 (+${10+bonus} XP)`:'答對！+10 XP';
+    $('q-msg').textContent= mock? '✓ 答對！' : '✓ 答對！　'+expl;
     if(P.dailyCount===GOAL) toast('🎉 達成今日目標！你超讚！');
   } else {
     btn.classList.add('wrong','shake'); streak=0;
     buttons.forEach(b=>{ if(b.dataset.val===correct) b.classList.add('correct'); }); speakItem(cur);
     $('q-msg').style.color='var(--bad)';
-    $('q-msg').textContent= cur.type==='kana'?`「${cur.front}」唸作 ${cur.read}`
-      : cur.type==='vocab'?`「${cur.front}」(${cur.read}) 是「${cur.meaning}」`
-      : cur.type==='grammar'?`正解：${cur.a} ・ ${cur.q.replace('＿','【'+cur.a+'】')}`
-      : cur.type==='listen'?`正解：${cur.a}　（聽到：「${cur.audio}」）`
-      : `正解：${cur.a}${cur.exp?' ・ '+cur.exp:''}`;
+    $('q-msg').textContent= mock? ('✗ '+expl) : ('✗ '+expl);
   }
   if(mock){ const cell=mock.list[mock.idx]; const ps=mock.perSec[cell.sec]||(mock.perSec[cell.sec]={c:0,t:0}); ps.t++; if(ok){mock.correct++;ps.c++;} else { mock.wrong.push(cell.it); } mock.idx++; }
   else if(test){ if(ok) test.correct++; test.idx++; }
   buttons.forEach(b=>b.disabled=true); save(); renderStats(); updateProg();
-  setTimeout(newQuestion, ok?850:1700);
+  if(mock){ setTimeout(newQuestion, ok?700:1050); }        // 模擬考：計時、快速不中斷
+  else { const nb=$('q-next'); nb.hidden=false; nb.focus(); } // 練習/測驗：看講解，按「下一題」再繼續
 }
 function updateProg(){
   if(mock){ $('q-combo').textContent=''; $('q-prog').style.width=Math.min(100,mock.idx/mock.list.length*100)+'%'; return; }
@@ -1203,8 +1210,11 @@ function renderTestResult(){
   if(pass&&newly) toast(next?('🔓 解鎖「'+GROUPS[next].name+'」！'):'🎉 完成所有單字課程！');
 }
 $('weak-clear').onclick=()=>{ if(mock){ clearInterval(mock.timer); mock=null; $('weak-banner').classList.remove('show'); switchTo('home'); return; } if(test){ test=null; $('weak-banner').classList.remove('show'); switchTo('learn'); return; } quizOverride=null; $('weak-banner').classList.remove('show'); newQuestion(); };
+$('q-next').onclick=()=>{ $('q-next').hidden=true; newQuestion(); };
 document.addEventListener('keydown',e=>{
-  if(view!=='quiz'||locked) return; const n=parseInt(e.key,10);
+  if(view!=='quiz') return;
+  if(!$('q-next').hidden && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); $('q-next').click(); return; }
+  if(locked) return; const n=parseInt(e.key,10);
   if(n>=1&&n<=9){ const b=$('q-opts').children[n-1]; if(b&&b.classList.contains('opt')) b.click(); }
 });
 
